@@ -2,14 +2,16 @@
 # Blank lines and lines starting with '#' are ignored. Matched case-insensitively
 # against every tracked text file and the OOXML parts of .docx/.xlsx/.pptx.
 #
-# Keep this file APPEND-ONLY. Two kinds of entries:
-#   1. STRUCTURAL patterns — catch shapes you have not enumerated yet.
-#   2. EXACT strings — known real identifiers that must never ship.
+# Prefer STRUCTURAL patterns (shapes), not literal business values.
+#
+# A tool that ships literal names/IDs/codes leaks that very data by existing in
+# a public repo. So this file defaults to shapes only. Add literal strings ONLY
+# in a PRIVATE repository, never a public one.
 #
 # The structural examples below are starting points. Tune them to your domain,
 # and be careful that generic shapes don't match machine-generated hex IDs
 # inside OOXML (a 6-digit + 2-hex-letter id like 0-0-0-0-0-1-F-F is NOT real
-# data; the trial-ID example excludes pure-hex suffixes for this reason).
+# data; the id example excludes pure-hex suffixes for this reason).
 
 # --- structural shapes (generic starting set — edit for your project) ---
 # ID-like: 6 digits + a letter suffix containing a non-hex letter (G-Z),
@@ -21,7 +23,8 @@
 # Add your own private-marker words as commented examples, then activate:
 # \bYOUR_MARKER\b
 
-# --- exact strings (ADD YOUR PROJECT'S REAL IDENTIFIERS HERE) ---
-# Example (delete and replace with your own):
+# --- literal strings: PRIVATE repos only, never public ---
+# Only if this repo is private. Placeholders shown; never commit real values
+# to a public repo:
 # 123456ZZ
 # Jane\s*Doe

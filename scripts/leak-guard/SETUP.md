@@ -20,8 +20,9 @@ leak**, and the CI layer cannot be bypassed:
 ## Install (3 steps)
 
 **1. Copy this folder** into your repo, e.g. `scripts/leak-guard/`, then edit
-`patterns.txt`: keep the structural shapes that fit your domain and add your
-project's real identifiers as exact strings (append-only).
+`patterns.txt`: keep the structural shapes that fit your domain. Add literal
+business strings only if your repo is **private** — never put real names, IDs,
+or codes in a public repo, not even in the pattern list.
 
 **2. Install the local hook** (once per checkout / machine — hooks aren't cloned):
 
@@ -86,5 +87,6 @@ python3 scripts/leak-guard/scan.py   # exit 0 = clean, 1 = found, 2 = config err
 - **The hook is convenience, CI is insurance.** `.git/hooks/` is never cloned,
   so a fresh checkout has no hook until `install-hooks.sh` runs. The CI job is
   the layer that always runs.
-- **patterns.txt is append-only.** Every time a new real identifier surfaces,
-  add the exact string and, if it has a shape, a structural pattern too.
+- **Prefer shapes over literals.** When a new leak shape surfaces, add a
+  structural pattern. Literal names/IDs/codes belong only in a private repo —
+  a public tool that lists them leaks them by existing.
