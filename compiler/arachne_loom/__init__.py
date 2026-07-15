@@ -1,0 +1,3 @@
+"""Reliable DOCX deterministic compiler."""
+
+__version__ = "0.0.2"

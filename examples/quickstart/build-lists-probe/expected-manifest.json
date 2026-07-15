@@ -1,0 +1,92 @@
+{
+  "manifestVersion": "0.0.1",
+  "createdAt": "2026-07-15T14:31:58.457351+00:00",
+  "compilerVersion": "0.0.2",
+  "hashes": {
+    "base": "88c66d3642f9686c917eaef265f258d0d61f32acbac592914609f4d8b8b9f549",
+    "model": "d16b36222d992591d136126e068289ac2e6ed35f3a217adacca16647f8d5168b",
+    "profile": "4816ebd01ec393dc2539e2f7880d03f2c918e36580239844c004c746d20542d8",
+    "task": "785a1c2704f4d0d156c95fe45164f75fb13d855db2f2e02e3e736e1c051f8de8"
+  },
+  "objects": [
+    {
+      "id": "h-1",
+      "type": "heading",
+      "order": 0
+    },
+    {
+      "id": "h-3",
+      "type": "heading",
+      "order": 2
+    },
+    {
+      "id": "fig-design",
+      "type": "figure",
+      "order": 4
+    },
+    {
+      "id": "h-6",
+      "type": "heading",
+      "order": 5
+    },
+    {
+      "id": "tbl-study",
+      "type": "table",
+      "order": 7
+    }
+  ],
+  "captions": [
+    {
+      "objectId": "fig-design",
+      "bookmark": "rdx_fig_design_561d2df9",
+      "kind": "figure",
+      "cachedDisplay": "图 4.7.3.1-1"
+    },
+    {
+      "objectId": "tbl-study",
+      "bookmark": "rdx_tbl_study_4eaa4637",
+      "kind": "table",
+      "cachedDisplay": "表 4.7.3.2-1"
+    }
+  ],
+  "crossReferences": [
+    {
+      "block": 3,
+      "inline": 1,
+      "targetId": "fig-design"
+    },
+    {
+      "block": 6,
+      "inline": 1,
+      "targetId": "tbl-study"
+    }
+  ],
+  "tables": [
+    {
+      "id": "tbl-study",
+      "rows": 3,
+      "columns": 3
+    }
+  ],
+  "images": [
+    {
+      "id": "fig-design",
+      "src": "images/figure.png"
+    }
+  ],
+  "tocFields": [
+    {
+      "kind": "toc",
+      "instruction": "TOC \\o \"1-4\" \\h"
+    },
+    {
+      "kind": "tables",
+      "instruction": "TOC \\c \"Table\" \\h"
+    },
+    {
+      "kind": "figures",
+      "instruction": "TOC \\c \"Figure\" \\h"
+    }
+  ],
+  "expectedFieldCount": 9
+}

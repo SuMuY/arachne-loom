@@ -1,0 +1,33 @@
+{
+  "configId": "ctd-default-v1-provisional",
+  "language": "zh-CN",
+  "documentLanguage": "auto",
+  "languageFallback": "zh-CN",
+  "page": {"size": "letter", "marginsCm": {"top": 2, "right": 2, "bottom": 2, "left": 2}, "orientation": "portrait"},
+  "body": {"fontFamily": "Times New Roman", "fontSizePt": 12, "lineSpacing": 1.5, "alignment": "justified", "paragraphAfterPt": 6},
+  "headingStyle": {"italic": false},
+  "table": {"fontSizePt": 10.5, "layout": "autoFitWindow", "style": "threeLine", "repeatHeaderRow": true, "allowLocalOverrides": true},
+  "styles": {"roles": {
+    "headingLevel1": {"styleId": "Heading1", "styleName": "标题 1", "outlineLevel": 0},
+    "headingLevel2": {"styleId": "Heading2", "styleName": "标题 2", "outlineLevel": 1},
+    "headingLevel3": {"styleId": "Heading3", "styleName": "标题 3", "outlineLevel": 2},
+    "headingLevel4": {"styleId": "Heading4", "styleName": "标题 4", "outlineLevel": 3},
+    "headingLevel5": {"styleId": "Heading5", "styleName": "标题 5", "outlineLevel": 4},
+    "headingLevel6": {"styleId": "Heading6", "styleName": "标题 6", "outlineLevel": 5},
+    "headingLevel7": {"styleId": "Heading7", "styleName": "标题 7", "outlineLevel": 6},
+    "headingLevel8": {"styleId": "Heading8", "styleName": "标题 8", "outlineLevel": 7},
+    "headingLevel9": {"styleId": "Heading9", "styleName": "标题 9", "outlineLevel": 8},
+    "caption": {"styleId": "Caption", "styleName": "caption"}
+  }},
+  "caption": {
+    "labelMode": "auto", "useNativeFields": true, "numberingFormula": "chapter-sequence", "separator": "-", "crossReferenceDisplay": "labelAndNumber", "tablePosition": "above", "figurePosition": "below",
+    "table": {"sequenceIdentifier": "Table", "labels": {"zh-CN": "表", "en-US": "Table"}, "captionStyleRole": "caption", "position": "above", "chapterStyleRole": "headingLevel3", "sequenceResetLevel": 3, "separator": "-"},
+    "figure": {"sequenceIdentifier": "Figure", "labels": {"zh-CN": "图", "en-US": "Figure"}, "captionStyleRole": "caption", "position": "below", "chapterStyleRole": "headingLevel4", "sequenceResetLevel": 4, "separator": "-"}
+  },
+  "captionStyle": {"fontSizePt": 12, "bold": true, "italic": false, "alignment": "center", "spaceBeforePt": 0, "spaceAfterPt": 6, "lineSpacing": 1},
+  "references": {"useNativeFields": true, "color": "#0000FF", "underline": true, "requireClickable": true},
+  "literature": {"citationFormat": "[n]", "citationPlacement": "superscript", "citationColor": "#0000FF", "citationUnderline": false, "useNativeFields": true, "referenceListOrder": "citationOrder", "referenceStyle": "APA", "maxAuthors": 3, "fullTitle": true, "italicizeJournal": true, "italicizePages": true},
+  "toc": {"bodyEnabled": true, "bodyMaxLevel": 3, "tableListEnabled": true, "figureListEnabled": true, "order": ["toc", "tables", "figures"]},
+  "review": {"mode": "cleanSubmission", "revisionBasis": "finalDisplay", "preserveComments": false, "restoreCommentsOnlyWhenAnchored": true},
+  "capabilities": {"literatureCitations": false}
+}

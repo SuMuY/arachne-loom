@@ -1,0 +1,31 @@
+{
+  "manifestVersion": "0.0.1",
+  "createdAt": "2026-07-15T14:31:58.263469+00:00",
+  "hashes": {
+    "base": "88c66d3642f9686c917eaef265f258d0d61f32acbac592914609f4d8b8b9f549",
+    "model": "dd6f70072cbc73f011d8ff0773429ffcd491937ccef2f5aba63fcf79410f928e",
+    "profile": "4816ebd01ec393dc2539e2f7880d03f2c918e36580239844c004c746d20542d8",
+    "task": "1ec0f5c90764cc27531e049468913010b0329d121b6f6acba2740cf6d9476508"
+  },
+  "bookmarks": [
+    "rdx_tbl_study_4eaa4637"
+  ],
+  "fields": [
+    "STYLEREF \"标题 3\" \\s \\* MERGEFORMAT",
+    "SEQ Table \\s 3 \\* ARABIC",
+    "REF rdx_tbl_study_4eaa4637 \\h"
+  ],
+  "fieldCount": 3,
+  "tocFields": [],
+  "hyperlinkRefRuns": 1,
+  "tables": [
+    {
+      "order": 0,
+      "rows": 3,
+      "columns": 3
+    }
+  ],
+  "images": [],
+  "wordErrorCachePresent": false,
+  "structuralIssues": []
+}

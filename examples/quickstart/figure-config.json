@@ -1,0 +1,9 @@
+{
+  "taskId": "figure-probe",
+  "profileLanguage": "zh-CN",
+  "emitLists": true,
+  "tocMaxLevel": 4,
+  "resourceRoot": ".",
+  "baseTemplate": "../../compiler/templates/zh-CN/base.docx",
+  "languageFallback": "zh-CN"
+}

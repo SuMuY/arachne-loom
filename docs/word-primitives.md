@@ -1,0 +1,3 @@
+# Word Primitives
+
+Headings use Word Heading styles. Captions contain a bookmark around the localized label, `STYLEREF`, separator, and `SEQ Table`/`SEQ Figure` fields. The stable v0 body-reference baseline is one Word-native `REF bookmark \h` field. It updates and navigates without unsupported switches; blue/underline persistence after field updates remains an open Word-profile issue and is not claimed as passed. Avoid nested HYPERLINK/REF fields and `\*` switches until a target-Word probe accepts them. Table and figure lists must be `TOC \c` fields when implemented. Field instructions preserve whitespace and include cached display text.

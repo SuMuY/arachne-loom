@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arachne-loom.dev/schema/generation-task-0.0.1.json",
+  "title": "Generation task (provisional)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["taskId", "resourceRoot", "baseTemplate", "profileLanguage"],
+  "properties": {
+    "taskId": {"type": "string", "minLength": 1},
+    "resourceRoot": {"type": "string", "minLength": 1},
+    "baseTemplate": {"type": "string", "minLength": 1},
+    "profileLanguage": {"enum": ["zh-CN", "en-US"]},
+    "emitLists": {"type": "boolean"},
+    "tocMaxLevel": {"type": "integer", "minimum": 1, "maximum": 9},
+    "languageFallback": {"enum": ["zh-CN", "en-US"]}
+  }
+}

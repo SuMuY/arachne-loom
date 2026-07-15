@@ -1,0 +1,17 @@
+# Python caches and local tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# macOS/editor noise
+.DS_Store
+*.swp
+*~
+
+# Local build outputs; checked-in examples use named, reviewed directories.
+/build/
+/dist/
+/tmp/

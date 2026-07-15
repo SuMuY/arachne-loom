@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arachne-loom.dev/schema/ctd-profile-0.0.1.json",
+  "title": "CTD profile (provisional)",
+  "type": "object",
+  "required": ["configId", "page", "body", "styles", "caption", "capabilities"],
+  "properties": {
+    "configId": {"type": "string"},
+    "page": {"type": "object"}, "body": {"type": "object"},
+    "styles": {"type": "object", "required": ["roles"]},
+    "headingStyle": {"type": "object"},
+    "captionStyle": {"type": "object"},
+    "caption": {"type": "object", "required": ["table", "figure"]},
+    "capabilities": {"type": "object", "required": ["literatureCitations"]}
+  }
+}

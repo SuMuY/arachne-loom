@@ -1,0 +1,8 @@
+{
+  "taskId": "figure-no-lists-probe",
+  "profileLanguage": "zh-CN",
+  "emitLists": false,
+  "resourceRoot": ".",
+  "baseTemplate": "../../compiler/templates/zh-CN/base.docx",
+  "languageFallback": "zh-CN"
+}

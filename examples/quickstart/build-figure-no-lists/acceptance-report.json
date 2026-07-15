@@ -1,0 +1,12 @@
+{
+  "status": "STATIC_PASS_PENDING_WORD_ACCEPTANCE",
+  "staticChecks": [
+    "input validation",
+    "DOCX generation",
+    "manifest emitted"
+  ],
+  "wordAcceptance": {
+    "status": "PENDING",
+    "reason": "Requires supported desktop Microsoft Word evidence; not inferred from OOXML."
+  }
+}

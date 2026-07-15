@@ -1,0 +1,37 @@
+{
+  "manifestVersion": "0.0.1",
+  "createdAt": "2026-07-15T14:31:58.397856+00:00",
+  "hashes": {
+    "base": "88c66d3642f9686c917eaef265f258d0d61f32acbac592914609f4d8b8b9f549",
+    "model": "d16b36222d992591d136126e068289ac2e6ed35f3a217adacca16647f8d5168b",
+    "profile": "4816ebd01ec393dc2539e2f7880d03f2c918e36580239844c004c746d20542d8",
+    "task": "98d5882569ee121b9113885a9022a64f574c0df9f929274434e1c6057d1ab223"
+  },
+  "bookmarks": [
+    "rdx_fig_design_561d2df9",
+    "rdx_tbl_study_4eaa4637"
+  ],
+  "fields": [
+    "REF rdx_fig_design_561d2df9 \\h",
+    "STYLEREF \"标题 4\" \\s \\* MERGEFORMAT",
+    "SEQ Figure \\s 4 \\* ARABIC",
+    "REF rdx_tbl_study_4eaa4637 \\h",
+    "STYLEREF \"标题 3\" \\s \\* MERGEFORMAT",
+    "SEQ Table \\s 3 \\* ARABIC"
+  ],
+  "fieldCount": 6,
+  "tocFields": [],
+  "hyperlinkRefRuns": 2,
+  "tables": [
+    {
+      "order": 0,
+      "rows": 3,
+      "columns": 3
+    }
+  ],
+  "images": [
+    "media/image1.png"
+  ],
+  "wordErrorCachePresent": false,
+  "structuralIssues": []
+}
