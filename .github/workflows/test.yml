@@ -5,7 +5,15 @@ on:
   pull_request:
 
 jobs:
+  leak-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for sensitive data
+        run: python3 scripts/scan-sensitive.py
+
   python:
+    needs: leak-guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

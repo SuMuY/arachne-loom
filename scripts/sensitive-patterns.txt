@@ -1,0 +1,16 @@
+# Structural patterns for arachne-loom's leak guard.
+#
+# One Python regex per line, matched case-insensitively against every tracked
+# text file and the extracted text of every .docx.
+#
+# This file contains ONLY generic structural shapes — no business values, no
+# names, no project-specific identifiers. A research tool must not carry the
+# business data it protects against; keeping only shapes means the tool cannot
+# leak anything by merely existing.
+#
+# Business projects that need to match their own private literal strings should
+# do so in that private project's own environment, never in this public tool.
+
+# ID-like: 6 digits followed by a letter suffix containing a non-hex letter
+# (G-Z), so machine-generated hex ids inside OOXML are not matched.
+\b\d{6}[A-Z]*[G-Z][A-Z]*\b

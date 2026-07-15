@@ -76,3 +76,14 @@ def test_inspector_detects_crossing_bookmark(tmp_path):
     actual = inspect(source)
     assert any(issue["type"] == "bookmark-spans-paragraphs" for issue in actual["structuralIssues"])
     assert any(issue["type"] == "cross-paragraph-field" for issue in actual["structuralIssues"])
+
+
+def test_no_sensitive_data_in_repo():
+    """Layer 3: the leak-guard scanner must find nothing. Same scanner the
+    pre-push hook and CI run, so pytest is also a leak gate."""
+    import subprocess
+    result = subprocess.run(
+        ["python3", str(PACKAGE / "scripts" / "scan-sensitive.py")],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, f"leak guard failed:\n{result.stderr}"
