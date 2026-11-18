@@ -185,3 +185,31 @@ The compiler and its `tests/` run with **no Word and no AI**. Native field behav
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Hierarchical heading indentation (v0.0.3)
+
+To indent deeper heading levels, add this optional object to your profile:
+
+```json
+"headingStyle": {
+  "italic": false,
+  "indentation": {"basePt": 0, "incrementPt": 18, "hangingPt": 72}
+}
+```
+
+The level-1 number starts at 0 pt; levels 2 and 3 start at 18 and 36 pt.
+Text and continuation lines start 72 pt after each number's anchor. The generous
+hanging area accommodates longer chapter numbers; choose it for your document's
+font and deepest numbering. All three fields are required non-negative numbers
+in points (72 pt = 1 inch). Omit `indentation` to retain the previous layout.
+The standard CTD profiles are unchanged.
+
+Try the complete example:
+
+```sh
+loom parse examples/quickstart/indented-headings.md -o /tmp/indented-model.json
+loom compile /tmp/indented-model.json examples/quickstart/indented-profile.json examples/quickstart/config.json --out-dir /tmp/loom-indented
+```
+
+See [the heading indentation guide](docs/heading-indentation.md) for geometry,
+Word verification, and scope.

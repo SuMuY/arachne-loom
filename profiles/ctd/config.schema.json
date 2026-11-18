@@ -9,7 +9,21 @@
     "language": {"enum": ["zh-CN", "en-US"]},
     "page": {"type": "object"}, "body": {"type": "object"},
     "styles": {"type": "object", "required": ["roles"]},
-    "headingStyle": {"type": "object"},
+    "headingStyle": {
+      "type": "object",
+      "properties": {
+        "italic": {"type": "boolean"},
+        "indentation": {
+          "type": "object", "additionalProperties": false,
+          "required": ["basePt", "incrementPt", "hangingPt"],
+          "properties": {
+            "basePt": {"type": "number", "minimum": 0},
+            "incrementPt": {"type": "number", "minimum": 0},
+            "hangingPt": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
     "captionStyle": {"type": "object"},
     "caption": {"type": "object", "required": ["table", "figure"]},
     "capabilities": {"type": "object", "required": ["literatureCitations"]}

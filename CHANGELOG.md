@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.3 - Hierarchical heading indentation
+
+- Added optional `headingStyle.indentation` with base, per-level increment, and hanging indent in points, for heading levels 1–9.
+- Synchronized heading styles, native multilevel numbering, and tab stops so wrapped text aligns with heading text.
+- Reject malformed, negative, non-finite, and unknown indentation settings. Existing profiles retain their previous layout.
+- Added a runnable Chinese example and regression coverage for Chinese/English profiles.
+- Automated OOXML checks cover the new geometry; desktop Word observations are recorded in the heading indentation guide.
+
 ## 0.0.2 - Word-probed
 
 - Recorded target Word acceptance for figure captions/references and body/table/figure lists.

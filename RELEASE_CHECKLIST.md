@@ -16,3 +16,12 @@ Users need a checkout of this repository, Python 3.10+, `python-docx`, `lxml`, a
 ## Scope of the first release
 
 The first release supports headings, rectangular tables, figures, native captions, body cross-references, TOC/table/figure lists, validation, and independent DOCX inspection. Merged cells, literature-management fields, comments/revisions, section-specific headers, and automated desktop Word testing remain out of scope.
+
+## v0.0.3 checks (2026-11-18)
+
+- [x] Isolated repository clone; no private source documents.
+- [x] Regression tests and CLI heading example passed.
+- [x] Version and changelog updated; optional configuration preserves existing profiles.
+- [ ] Full-size desktop Word visual check: Open dialog did not open selected DOCX; computer-use request then timed out. See `docs/heading-indentation.md`.
+
+This release adds automated geometry coverage; it does not add a new desktop Word acceptance result to the v0.0.2 behavior baseline.

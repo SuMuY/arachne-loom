@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arachne-loom"
-version = "0.0.2"
+version = "0.0.3"
 description = "Deterministic semantic-model to DOCX compiler"
 requires-python = ">=3.10"
 dependencies = ["python-docx>=1.1", "lxml>=4.9"]

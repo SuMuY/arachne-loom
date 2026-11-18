@@ -13,6 +13,7 @@ from typing import Any
 
 from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.text import WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
@@ -56,6 +57,15 @@ def _set_repeat_table_header(row) -> None:
     tr_pr.append(element)
 
 
+def _heading_geometry(profile: dict[str, Any], level: int) -> tuple[int, int] | None:
+    config = profile.get("headingStyle", {}).get("indentation")
+    if config is None:
+        return None
+    # Resolve to twips once so styles and numbering use identical rounding.
+    anchor = config["basePt"] + (level - 1) * config["incrementPt"]
+    return round((anchor + config["hangingPt"]) * 20), round(config["hangingPt"] * 20)
+
+
 def _ensure_heading_numbering(document: Document, number_path: list[str], profile: dict[str, Any]) -> int:
     numbering = document.part.numbering_part.element
     abstract_ids = [int(node.get(qn("w:abstractNumId"))) for node in numbering.findall(qn("w:abstractNum"))]
@@ -77,6 +87,22 @@ def _ensure_heading_numbering(document: Document, number_path: list[str], profil
         role = profile.get("styles", {}).get("roles", {}).get(f"headingLevel{level + 1}")
         if role:
             pstyle = OxmlElement("w:pStyle"); pstyle.set(qn("w:val"), role["styleId"]); item.append(pstyle)
+        geometry = _heading_geometry(profile, level + 1)
+        if geometry is not None:
+            left, hanging = geometry
+            if role:
+                item.remove(pstyle)
+                item.insert(list(item).index(text), pstyle)
+            suffix = OxmlElement("w:suff"); suffix.set(qn("w:val"), "tab")
+            item.insert(list(item).index(text), suffix)
+            ppr = OxmlElement("w:pPr")
+            tabs = OxmlElement("w:tabs")
+            tab = OxmlElement("w:tab")
+            tab.set(qn("w:val"), "num"); tab.set(qn("w:pos"), str(left))
+            tabs.append(tab); ppr.append(tabs)
+            ind = OxmlElement("w:ind")
+            ind.set(qn("w:left"), str(left)); ind.set(qn("w:hanging"), str(hanging))
+            ppr.append(ind); item.append(ppr)
         abstract.append(item)
     numbering.append(abstract)
     num = OxmlElement("w:num"); num.set(qn("w:numId"), str(num_id))
@@ -201,6 +227,13 @@ def _apply_profile(document: Document, profile: dict[str, Any]) -> None:
             name.set(qn("w:val"), role["styleName"])
         # The locale base may carry italic on Heading4; CTD headings are upright.
         style.font.italic = profile.get("headingStyle", {}).get("italic", False)
+        geometry = _heading_geometry(profile, level)
+        if geometry is not None:
+            left, hanging = geometry
+            style.paragraph_format.left_indent = Pt(left / 20)
+            style.paragraph_format.first_line_indent = Pt(-hanging / 20)
+            style.paragraph_format.tab_stops.clear_all()
+            style.paragraph_format.tab_stops.add_tab_stop(Pt(left / 20), WD_TAB_ALIGNMENT.LIST)
     # Keep role references honest: profile style IDs must exist in the accepted base.
     available = {style.style_id for style in document.styles}
     for role_name, role in profile.get("styles", {}).get("roles", {}).items():

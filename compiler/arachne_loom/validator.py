@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,16 @@ def _role(profile: dict[str, Any], role: str) -> dict[str, Any] | None:
 
 def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]) -> list[str]:
     errors: list[str] = []
+    heading = profile.get("headingStyle", {})
+    if "indentation" in heading:
+        config = heading["indentation"]
+        keys = {"basePt", "incrementPt", "hangingPt"}
+        if not isinstance(config, dict) or set(config) != keys:
+            errors.append("headingStyle.indentation requires exactly basePt, incrementPt, hangingPt")
+        else:
+            for key, value in config.items():
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                    errors.append(f"headingStyle.indentation.{key} must be a finite non-negative number")
     if model.get("schemaVersion") != "0.0.1-provisional":
         errors.append("unsupported or missing schemaVersion")
     if model.get("language") not in {"zh-CN", "en-US"}:
