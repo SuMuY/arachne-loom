@@ -8,6 +8,56 @@
 
 ---
 
+## 适用范围：通用排版能力与医学文档配置
+
+**当前定位：以 CTD 为首个配置场景的结构化 Word 生成工具。底层机制可复用于非医学文档，也可用于 CSR、临床试验方案等医学文档中的受支持结构。仓库目前提供 CTD 中英文配置，尚未交付单独的通用、CSR 或方案配置及相应全文验收。**
+
+### 哪些是通用能力？
+
+| 能力 | 可复用范围与现有支持 |
+| --- | --- |
+| 标题层级、编号、缩进 | 支持 1–9 级标题及逐级缩进；编号目前采用 `1 / 1.1 / 1.1.1` |
+| 有序、无序列表 | 单层原生列表；全文统一标记位置、正文起点和续行缩进；支持独立起始编号 |
+| 图表题注与交叉引用 | 原生 `STYLEREF`、`SEQ`、`REF` 域及书签；对象移动后由 Word 管理编号与引用 |
+| 目录 | 正文目录、图目录、表目录；目录域需在 Word 中更新 |
+| 页面与正文基础设置 | A4/Letter、页边距、正文字体与字号；标题/列表缩进及题注的部分样式可配置 |
+| 结构检查 | 输入对象 ID、引用目标、资源路径及生成 DOCX 的域/书签检查 |
+
+这些机制不检查医学内容或 CTD 章节名称。普通技术报告和业务报告也可使用，但必须采用当前支持的输入结构和编号方式。
+
+### 哪些适用于医学写作？哪些属于 CTD 默认配置？
+
+**可以复用到医学写作的工程规则**包括：正文、图表数据及引用关系由明确的输入模型提供；排版不擅自改写科学内容；使用真实标题层级与原生编号；图表题注和交叉引用保持关联；先做结构检查，再用桌面 Word 验收。这些规则也适用于其他严肃文档，并非医学专属。
+
+**CTD profile 是本仓库的排版预设，不是所有医学文件的统一规范。** 它包含中英文样式映射、默认字体/页面参数、题注外观，以及按章节组织图表编号的规则。当前默认表题依赖三级标题，图题依赖四级标题；依赖层级可调整。是否适合具体申办方或项目，须对照其模板确认。
+
+| 文档场景 | 当前适用方式 |
+| --- | --- |
+| CTD 文档 | 使用已提供的 CTD 配置；仍按目标项目模板核对参数及受支持结构 |
+| CSR、临床试验方案等 | 可复用标题、列表、图表及引用机制；须调整配置并以目标文档验收，目前无专用成品配置 |
+| 非医学报告 | 可使用相同机制生成受支持结构；独立通用配置尚未提供 |
+
+例如，CSR 若采用 `1 / 1.1` 标题和按章图表编号，可以复用相应机制；若要求图表全篇连续编号、横向大表、合并表头、复杂页眉页脚、修订或文献管理域，则需要先补齐对应能力。工具不检查 CSR 内容完整性或监管要求。
+
+### “增加通用配置、让规则真正可配置”是什么意思？
+
+目标是由同一套引擎读取不同的排版方案：通用报告、医学文档公共规则，以及 CTD/CSR/方案的具体模板。以下为后续设计方向，**不是当前已交付功能**：
+
+- **独立通用配置**：提供不沿用 CTD 章级假设的基础预设，CTD 保留为独立配置；用户选择目标配置即可使用。
+- **编号模式可选**：标题支持其他编号形式或无编号；图表支持按章重置或全文连续编号，而非仅改标签文字。
+- **配置确实生效**：目前正文 `lineSpacing`、`alignment`、`paragraphAfterPt` 虽写在 CTD 配置里，生成器未主动应用；表格当前固定使用 `Table Grid`。后续需实现对应行为并验证，不能仅增加 JSON 字段。
+- **格式验证可复用**：用不同场景样例检查同一配置是否始终生效，并做 CTD 回归，保留已验收能力。
+
+### 能否拿任意已有 Word 直接统一格式？
+
+**当前没有完整的 DOCX 导入或原位格式统一入口。** `parse` 读取约定的 Markdown，`compile` 读取 Canonical Model JSON；`inspect` 能检查 DOCX 的部分结构，但不输出可供编译器重建全文的模型。基础模板 `baseTemplate` 也不是源文档导入器。
+
+将已有 Word 的内容和关系先整理成受支持模型，再生成新 Word，是可探索的转换流程；当前尚未提供经过验证的自动转换器。对于现有原生标题/列表，可探索保留结构直接调整样式；对于手打编号、普通字符圆点或仅靠字号模拟标题的文件，则需识别语义并处理歧义。两种路径都需要专门验证。
+
+验证应使用代表性 `.docx` 和目标模板/格式要求，先盘点标题、列表、表格、图片、题注、引用、分节及修订，再比较处理前后正文、表格数据、对象关系和 Word 实际行为。真实项目文件留在仓库外；公开测试只使用合成或经确认脱敏的样例。具体文件能否可靠处理，要以这个测试结果判断。
+
+---
+
 ## Quick reference
 
 <sub>Dense summary for agents and readers in a hurry. Prose and diagrams follow below.</sub>
@@ -15,7 +65,7 @@
 **What it is.** A deterministic, AI-free CLI/library that compiles a semantic model into a `.docx` with native `SEQ`/`REF`/`TOC` fields, bookmarks, and multilevel heading numbering.
 
 **I/O contract.**
-- **Input:** a Canonical Model (JSON), *or* CTD-Markdown that `parse` converts into one — plus a CTD profile and a task config. The Canonical Model is the single semantic contract; the compiler never re-guesses meaning from Markdown.
+- **Input:** a Canonical Model (JSON), *or* CTD-Markdown that `parse` converts into one — plus a formatting profile and a task config (CTD presets are currently supplied). The Canonical Model is the single semantic contract; the compiler never re-guesses meaning from Markdown.
 - **Output:** `document.docx` + `expected-manifest.json` + `actual-manifest.json` + `acceptance-report.json` + `unresolved-issues.json`.
 
 **Commands.**
@@ -126,7 +176,7 @@ The loom accepts exactly one semantic contract — the **Canonical Model**. CTD-
                                 one true input contract
 ```
 
-This is what makes it reusable: the engine knows *Word formatting*, not medicine. Swap the **profile** (fonts, caption numbering, page size, failure catalog) and the same engine serves any structured Word document — the CTD profile is simply the first one shipped.
+The model and Word field mechanics are reusable across domains. A **profile** selects the implemented presentation policies; the supplied profiles target CTD. Other document types can reuse supported structures, but requirements outside the current numbering and layout capabilities need implementation and separate acceptance. See the scope section above for concrete limits.
 
 ---
 
@@ -156,6 +206,7 @@ The output directory also holds `expected-manifest.json`, `actual-manifest.json`
 | Woven natively | Deferred |
 |---|---|
 | Headings 1–9 + multilevel numbering | Merged table cells |
+| Single-level ordered/unordered lists | Nested lists |
 | Rectangular tables + captions | Literature-management fields |
 | Figures + captions | Comments / tracked revisions |
 | Body cross-references (`REF … \h`) | Section-specific headers |
