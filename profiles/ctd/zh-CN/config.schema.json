@@ -23,8 +23,27 @@
         }
       }
     },
+    "listStyle": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "ordered": {"$ref": "#/$defs/listGeometry"},
+        "unordered": {"$ref": "#/$defs/listGeometry"}
+      }
+    },
     "captionStyle": {"type": "object"},
     "caption": {"type": "object", "required": ["table", "figure"]},
     "capabilities": {"type": "object", "required": ["literatureCitations"]}
+  }
+,
+  "$defs": {
+    "listGeometry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["markerPt", "textPt"],
+      "properties": {
+        "markerPt": {"type": "number", "minimum": 0},
+        "textPt": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "description": "textPt must exceed markerPt (also checked by runtime validation)."
+    }
   }
 }

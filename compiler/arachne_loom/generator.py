@@ -66,6 +66,30 @@ def _heading_geometry(profile: dict[str, Any], level: int) -> tuple[int, int] | 
     return round((anchor + config["hangingPt"]) * 20), round(config["hangingPt"] * 20)
 
 
+def _new_list_numbering(document: Document, kind: str, start: int, marker: int, text: int) -> int:
+    """Each list has its own sequence; all lists of one kind share geometry."""
+    numbering = document.part.numbering_part.element
+    abstract_id = max((int(n.get(qn("w:abstractNumId"))) for n in numbering.findall(qn("w:abstractNum"))), default=0) + 1
+    num_id = max((int(n.get(qn("w:numId"))) for n in numbering.findall(qn("w:num"))), default=0) + 1
+    abstract = OxmlElement("w:abstractNum")
+    abstract.set(qn("w:abstractNumId"), str(abstract_id))
+    multi = OxmlElement("w:multiLevelType"); multi.set(qn("w:val"), "singleLevel"); abstract.append(multi)
+    level = OxmlElement("w:lvl"); level.set(qn("w:ilvl"), "0")
+    for tag, value in [("start", str(start) if kind == "ordered" else "1"),
+                       ("numFmt", "decimal" if kind == "ordered" else "bullet"),
+                       ("suff", "tab"), ("lvlText", "%1." if kind == "ordered" else "•"), ("lvlJc", "left")]:
+        child = OxmlElement(f"w:{tag}"); child.set(qn("w:val"), value); level.append(child)
+    ppr = OxmlElement("w:pPr")
+    tabs = OxmlElement("w:tabs"); tab = OxmlElement("w:tab")
+    tab.set(qn("w:val"), "num"); tab.set(qn("w:pos"), str(text)); tabs.append(tab); ppr.append(tabs)
+    ind = OxmlElement("w:ind")
+    ind.set(qn("w:left"), str(text)); ind.set(qn("w:hanging"), str(text-marker)); ppr.append(ind)
+    level.append(ppr); abstract.append(level); numbering.append(abstract)
+    num = OxmlElement("w:num"); num.set(qn("w:numId"), str(num_id))
+    ref = OxmlElement("w:abstractNumId"); ref.set(qn("w:val"), str(abstract_id)); num.append(ref); numbering.append(num)
+    return num_id
+
+
 def _ensure_heading_numbering(document: Document, number_path: list[str], profile: dict[str, Any]) -> int:
     numbering = document.part.numbering_part.element
     abstract_ids = [int(node.get(qn("w:abstractNumId"))) for node in numbering.findall(qn("w:abstractNum"))]
@@ -290,8 +314,9 @@ def expected_manifest(model: dict[str, Any], profile: dict[str, Any], task: dict
                              "cachedDisplay": f"{label} {number}{conf['separator']}{seq[kind]}"})
             if kind == "table": tables.append({"id": block["id"], "rows": len(block["rows"]), "columns": len(block["rows"][0])})
             else: images.append({"id": block["id"], "src": block["src"]})
-        if kind == "paragraph":
-            for inline_index, inline in enumerate(block["inlines"]):
+        if kind in {"paragraph", "list"}:
+            inlines = block["inlines"] if kind == "paragraph" else [inline for item in block["items"] for inline in item["inlines"]]
+            for inline_index, inline in enumerate(inlines):
                 if inline["type"] == "crossReference":
                     references.append({"block": position, "inline": inline_index, "targetId": inline["targetId"]})
     toc = profile.get("toc", {}) if task.get("emitLists", False) else {}
@@ -348,18 +373,31 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
             paragraph = document.add_paragraph(block["content"], style=_style_by_id(document, role["styleId"]))
             _bind_heading_numbering(paragraph, block["level"], heading_num_id)
             paragraph.paragraph_format.keep_with_next = True
-        elif kind == "paragraph":
-            paragraph = document.add_paragraph()
-            for inline in block["inlines"]:
-                if inline["type"] == "text":
-                    paragraph.add_run(inline["text"])
-                elif inline["type"] == "crossReference":
-                    target = caption_map[inline["targetId"]]
-                    references = profile.get("references", {})
-                    append_cross_reference(paragraph, target["bookmark"], target["cachedDisplay"],
-                                           references.get("color", "#0000FF"), references.get("underline", True))
-                else:
-                    raise ValueError("literature citations are not implemented")
+        elif kind in {"paragraph", "list"}:
+            if kind == "list":
+                geometry = profile.get("listStyle", {}).get(block["kind"], {"markerPt": 18, "textPt": 42})
+                marker, text = round(geometry["markerPt"] * 20), round(geometry["textPt"] * 20)
+                list_num = _new_list_numbering(document, block["kind"], block.get("start", 1), marker, text)
+                items = block["items"]
+            else:
+                items = [block]
+            for item in items:
+                paragraph = document.add_paragraph()
+                if kind == "list":
+                    _bind_heading_numbering(paragraph, 1, list_num)
+                    paragraph.paragraph_format.left_indent = Pt(text / 20)
+                    paragraph.paragraph_format.first_line_indent = Pt((marker - text) / 20)
+                    paragraph.paragraph_format.tab_stops.add_tab_stop(Pt(text / 20), WD_TAB_ALIGNMENT.LIST)
+                for inline in item["inlines"]:
+                    if inline["type"] == "text":
+                        paragraph.add_run(inline["text"])
+                    elif inline["type"] == "crossReference":
+                        target = caption_map[inline["targetId"]]
+                        references = profile.get("references", {})
+                        append_cross_reference(paragraph, target["bookmark"], target["cachedDisplay"],
+                                               references.get("color", "#0000FF"), references.get("underline", True))
+                    else:
+                        raise ValueError("literature citations are not implemented")
         elif kind == "table":
             table_seq += 1
             copy = dict(block, _currentChapter=current_chapter)

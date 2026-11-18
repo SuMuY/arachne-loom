@@ -213,3 +213,12 @@ loom compile /tmp/indented-model.json examples/quickstart/indented-profile.json 
 
 See [the heading indentation guide](docs/heading-indentation.md) for geometry,
 Word verification, and scope.
+
+## Uniform ordered and unordered lists (pending acceptance)
+
+Native single-level Word lists use consistent marker positions, text tab stops,
+and hanging indents throughout the document. Set `listStyle.ordered` and
+`listStyle.unordered` with `markerPt`/`textPt` to customize them.
+See [list formatting](docs/list-formatting.md) for input syntax and examples.
+This change is under development; the release remains a draft pending desktop
+Word acceptance of both heading and list formatting.

@@ -40,6 +40,18 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
             for key, value in config.items():
                 if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
                     errors.append(f"headingStyle.indentation.{key} must be a finite non-negative number")
+    if "listStyle" in profile:
+        config = profile["listStyle"]
+        if not isinstance(config, dict) or set(config) - {"ordered", "unordered"}:
+            errors.append("listStyle must contain only ordered/unordered objects")
+        else:
+            for kind, geometry in config.items():
+                if not isinstance(geometry, dict) or set(geometry) != {"markerPt", "textPt"}:
+                    errors.append(f"listStyle.{kind} requires markerPt and textPt")
+                elif any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0 for v in geometry.values()):
+                    errors.append(f"listStyle.{kind} positions must be finite non-negative numbers")
+                elif geometry["textPt"] <= geometry["markerPt"]:
+                    errors.append(f"listStyle.{kind}.textPt must exceed markerPt")
     if model.get("schemaVersion") != "0.0.1-provisional":
         errors.append("unsupported or missing schemaVersion")
     if model.get("language") not in {"zh-CN", "en-US"}:
@@ -80,8 +92,22 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
                 ids.add(value)
                 if kind in {"table", "figure"}:
                     targets.add(value)
-        if kind == "paragraph":
-            for inline in block.get("inlines", []):
+        if kind == "list":
+            if block.get("kind") not in {"ordered", "unordered"}:
+                errors.append(f"block {position}: list kind must be ordered or unordered")
+            start = block.get("start", 1)
+            if isinstance(start, bool) or not isinstance(start, int) or not 1 <= start <= 2147483647:
+                errors.append(f"block {position}: list start must be a positive 32-bit integer")
+            items = block.get("items")
+            if not isinstance(items, list) or not items:
+                errors.append(f"block {position}: list requires non-empty items")
+            elif any(not isinstance(item, dict) or not isinstance(item.get("inlines"), list) or not item["inlines"] for item in items):
+                errors.append(f"block {position}: list items require non-empty inlines")
+        if kind == "list" and (not isinstance(block.get("items"), list) or any(not isinstance(item, dict) or not isinstance(item.get("inlines"), list) for item in block["items"])):
+            continue
+        if kind in {"paragraph", "list"}:
+            inlines = block.get("inlines", []) if kind == "paragraph" else [inline for item in block.get("items", []) if isinstance(item, dict) for inline in item.get("inlines", [])]
+            for inline in inlines:
                 if inline.get("type") == "crossReference":
                     refs.append(inline.get("targetId", ""))
                 if inline.get("type") == "literatureCitation" and not profile.get("capabilities", {}).get("literatureCitations", False):

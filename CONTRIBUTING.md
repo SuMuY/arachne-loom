@@ -50,3 +50,11 @@ cannot reach the public repo by being forgotten in a manual check.
 python3 scripts/scan-sensitive.py     # leak guard
 cd compiler && pytest                 # full suite (includes leak test)
 ```
+
+## Release acceptance gate
+
+Do not publish a release until the change's acceptance is complete, including
+desktop Word visual/behavior checks for formatting changes. Tool timeouts or
+other verification blockers keep the release in draft; passing automated XML
+checks does not waive desktop acceptance. Record the blocker and resume
+verification before publishing. Preserve existing tags while work continues.

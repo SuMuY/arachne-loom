@@ -170,5 +170,15 @@
   },
   "capabilities": {
     "literatureCitations": false
+  },
+  "listStyle": {
+    "unordered": {
+      "markerPt": 18,
+      "textPt": 42
+    },
+    "ordered": {
+      "markerPt": 18,
+      "textPt": 54
+    }
   }
 }

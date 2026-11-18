@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — list formatting (acceptance pending)
+
+- Added native ordered/unordered lists, configurable global marker/text positions, and hanging indents.
+- Added Markdown list parsing, independent sequences with explicit starts, configuration/model validation, and list reference manifest coverage.
+- Release remains a draft until desktop Word acceptance is complete.
+
 ## 0.0.3 - Hierarchical heading indentation
 
 - Added optional `headingStyle.indentation` with base, per-level increment, and hanging indent in points, for heading levels 1–9.

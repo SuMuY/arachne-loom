@@ -24,6 +24,7 @@
       {"type": "object", "required": ["type", "inlines"], "properties": {"type": {"const": "paragraph"}, "inlines": {"type": "array", "items": {"$ref": "#/$defs/inline"}}}},
       {"type": "object", "required": ["type", "id", "title", "headerRows", "rows"], "properties": {"type": {"const": "table"}, "id": {"$ref": "#/$defs/id"}, "title": {"type": "string"}, "headerRows": {"const": 1}, "rows": {"type": "array", "minItems": 1, "items": {"type": "array", "minItems": 1, "items": {"type": "string"}}}}},
       {"type": "object", "required": ["type", "id", "src", "title", "alt"], "properties": {"type": {"const": "figure"}, "id": {"$ref": "#/$defs/id"}, "src": {"type": "string"}, "title": {"type": "string"}, "alt": {"type": "string"}}},
+      {"type": "object", "required": ["type", "kind", "items"], "properties": {"type": {"const": "list"}, "kind": {"enum": ["ordered", "unordered"]}, "start": {"type": "integer", "minimum": 1, "maximum": 2147483647}, "items": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["inlines"], "properties": {"inlines": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/inline"}}}}}}},
       {"type": "object", "required": ["type", "items", "order"], "properties": {"type": {"const": "references"}, "order": {"enum": ["citationOrder"]}, "items": {"type": "array"}}}
     ]}
   }

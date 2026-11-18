@@ -10,6 +10,7 @@ from typing import Any
 from .model import canonical_document, text_inline
 
 HEADING = re.compile(r"^(#{1,9})\s+(?:(\d+(?:\.\d+)*)\s+)?(.+?)\s*$")
+LIST_ITEM = re.compile(r"^([-+*•]|[0-9]+[.)])\s+(.+)$")
 DIRECTIVE = re.compile(r"^:::(table|figure)\s+(.+?)\s*$")
 ATTR = re.compile(r'([a-zA-Z][\w-]*)=("[^"]*"|[^\s]+)')
 REFERENCE = re.compile(r"\[@([A-Za-z][A-Za-z0-9_-]*)\]")
@@ -71,6 +72,22 @@ def parse_markdown(path: str | Path) -> dict[str, Any]:
             blocks.append({"type": "heading", "id": f"h-{len(blocks)+1}", "level": len(hashes), "content": body,
                            "numberPath": number.split(".") if number else []})
             i += 1
+            continue
+        list_match = LIST_ITEM.match(line)
+        if list_match:
+            marker, content = list_match.groups()
+            ordered = marker[0].isdigit()
+            block = {"type": "list", "kind": "ordered" if ordered else "unordered",
+                     "start": int(marker[:-1]) if ordered else 1, "items": []}
+            while i < len(lines):
+                match = LIST_ITEM.match(lines[i].strip())
+                if not match or match.group(1)[0].isdigit() != ordered:
+                    break
+                if lines[i][:1].isspace():
+                    raise ParseError(f"nested lists are not supported at line {i+1}")
+                block["items"].append({"inlines": _inlines(match.group(2))})
+                i += 1
+            blocks.append(block)
             continue
         directive = DIRECTIVE.match(line)
         if directive:
