@@ -186,7 +186,7 @@ The compiler and its `tests/` run with **no Word and no AI**. Native field behav
 
 MIT — see [LICENSE](LICENSE).
 
-## Hierarchical heading indentation (v0.0.3)
+## Hierarchical heading indentation (v0.0.4)
 
 To indent deeper heading levels, add this optional object to your profile:
 
@@ -214,11 +214,11 @@ loom compile /tmp/indented-model.json examples/quickstart/indented-profile.json 
 See [the heading indentation guide](docs/heading-indentation.md) for geometry,
 Word verification, and scope.
 
-## Uniform ordered and unordered lists (pending acceptance)
+## Uniform ordered and unordered lists (v0.0.4)
 
 Native single-level Word lists use consistent marker positions, text tab stops,
 and hanging indents throughout the document. Set `listStyle.ordered` and
 `listStyle.unordered` with `markerPt`/`textPt` to customize them.
 See [list formatting](docs/list-formatting.md) for input syntax and examples.
-This change is under development; the release remains a draft pending desktop
-Word acceptance of both heading and list formatting.
+Desktop Word visual and save/reopen checks and user acceptance were completed
+on 2026-11-18. See the acceptance records in the heading indentation guide.

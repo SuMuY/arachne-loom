@@ -1,12 +1,14 @@
 # Changelog
 
-## Unreleased — list formatting (acceptance pending)
+## 0.0.4 - Accepted heading and list formatting (2026-11-18)
 
 - Added native ordered/unordered lists, configurable global marker/text positions, and hanging indents.
 - Added Markdown list parsing, independent sequences with explicit starts, configuration/model validation, and list reference manifest coverage.
-- Release remains a draft until desktop Word acceptance is complete.
+- Fixed OOXML numbering definition order so Word honors heading levels and independent lists.
+- Desktop Word visual and save/reopen checks completed; user accepted the revised document on 2026-11-18.
+- Includes v0.0.3 heading indentation; preserves its existing tag without rewriting history.
 
-## 0.0.3 - Hierarchical heading indentation
+## 0.0.3 - Hierarchical heading indentation (withdrawn; superseded by 0.0.4)
 
 - Added optional `headingStyle.indentation` with base, per-level increment, and hanging indent in points, for heading levels 1–9.
 - Synchronized heading styles, native multilevel numbering, and tab stops so wrapped text aligns with heading text.

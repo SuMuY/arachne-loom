@@ -25,3 +25,11 @@ The first release supports headings, rectangular tables, figures, native caption
 - [ ] Full-size desktop Word visual check: Open dialog did not open selected DOCX; computer-use request then timed out. See `docs/heading-indentation.md`.
 
 This release adds automated geometry coverage; it does not add a new desktop Word acceptance result to the v0.0.2 behavior baseline.
+
+## v0.0.4 checks (2026-11-18)
+
+- [x] Full desktop Word visual checks: heading levels, repeated levels, wrapping, bullets, ordered lists, independent starts.
+- [x] Save, close, reopen, and compare heading/list alignment.
+- [x] User explicitly accepted the revised document and authorized publication.
+- [x] Version/changelog and current acceptance records updated; automated checks passed (37 tests).
+- [x] Existing v0.0.3 tag preserved; publish the accepted implementation as v0.0.4.
