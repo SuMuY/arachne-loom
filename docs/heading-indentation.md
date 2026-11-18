@@ -50,3 +50,11 @@ The preview thumbnail is insufficient to judge wrapping. Full-size Word visual
 acceptance remains pending; the release's geometry verification is automated
 OOXML validation. Open the README example to check stepped number positions,
 same-level alignment, and long-heading continuation lines in desktop Word.
+
+## 2026-11-18 用户验收失败与修订
+
+用户截图及随后直接连接 Word 的截图均显示：各级标题平齐，编号从 9 连续递增，视觉验收失败。旧自动测试只读取编号属性，未检查编号部件的完整元素顺序。
+
+诊断发现：新增 abstractNum 被 append 到现有 num 之后，违反 CT_Numbering 要求的 abstractNum 先于 num 的顺序。补充失败回归测试后，将标题及列表两处写入改为 insert_element_before；37 项测试通过。
+
+修订文件：下载目录下 arachne-loom-验收修订1.docx。尝试经 Word 打开对话框和访达打开，电脑控制工具返回 noWindowsAvailable、cgWindowNotFound 及 ScreenCaptureKit -3811 音频/视频捕捉失败。因此修订版尚未完成 Word 视觉验证，不能认定本修订已消除截图问题。发布继续禁止。

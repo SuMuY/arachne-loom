@@ -94,3 +94,17 @@ def test_nested_list_is_rejected(tmp_path):
     source.write_text('- Parent\n  - Child\n', encoding='utf-8')
     with pytest.raises(ParseError, match='nested lists'):
         parse_markdown(source)
+
+
+def test_numbering_definitions_precede_instances(tmp_path):
+    model, profile, task = fixture()
+    profile['headingStyle']['indentation'] = {'basePt': 0, 'incrementPt': 18, 'hangingPt': 72}
+    model['blocks'].insert(0, {'type': 'heading', 'id': 'h', 'level': 1, 'content': 'Heading', 'numberPath': ['1']})
+    output = compile_document(model, profile, task, tmp_path / 'build')
+    numbering = Document(output / 'document.docx').part.numbering_part.element
+    seen_instance = False
+    for child in numbering:
+        if child.tag == qn('w:num'):
+            seen_instance = True
+        if child.tag == qn('w:abstractNum'):
+            assert not seen_instance, 'abstractNum after num violates CT_Numbering order'

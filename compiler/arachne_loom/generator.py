@@ -84,7 +84,7 @@ def _new_list_numbering(document: Document, kind: str, start: int, marker: int, 
     tab.set(qn("w:val"), "num"); tab.set(qn("w:pos"), str(text)); tabs.append(tab); ppr.append(tabs)
     ind = OxmlElement("w:ind")
     ind.set(qn("w:left"), str(text)); ind.set(qn("w:hanging"), str(text-marker)); ppr.append(ind)
-    level.append(ppr); abstract.append(level); numbering.append(abstract)
+    level.append(ppr); abstract.append(level); numbering.insert_element_before(abstract, "w:num", "w:numIdMacAtCleanup")
     num = OxmlElement("w:num"); num.set(qn("w:numId"), str(num_id))
     ref = OxmlElement("w:abstractNumId"); ref.set(qn("w:val"), str(abstract_id)); num.append(ref); numbering.append(num)
     return num_id
@@ -128,7 +128,7 @@ def _ensure_heading_numbering(document: Document, number_path: list[str], profil
             ind.set(qn("w:left"), str(left)); ind.set(qn("w:hanging"), str(hanging))
             ppr.append(ind); item.append(ppr)
         abstract.append(item)
-    numbering.append(abstract)
+    numbering.insert_element_before(abstract, "w:num", "w:numIdMacAtCleanup")
     num = OxmlElement("w:num"); num.set(qn("w:numId"), str(num_id))
     abstract_ref = OxmlElement("w:abstractNumId"); abstract_ref.set(qn("w:val"), str(abstract_id)); num.append(abstract_ref)
     numbering.append(num)
