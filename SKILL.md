@@ -1,6 +1,6 @@
 ---
 name: arachne-loom
-description: Generate Word documents from explicitly structured content with native Word headings, numbering, nested lists, captions, cross-references, and tables of contents; conservatively normalize recognized native headings and lists in existing DOCX files. Use when creating or formatting structured DOCX output, or when standardizing supported Word-native paragraph geometry. Do not use as an automatic converter or repair tool for arbitrary Word documents.
+description: Use when generating or formatting medical-writing DOCX files that need structured Word headings, multilevel lists, captions, cross-references, tables of contents, or conservative normalization of recognized Word-native headings and lists.
 ---
 
 # Arachne Loom
@@ -14,6 +14,7 @@ All repository-relative paths below are relative to this Skill root. Follow `REA
 ## Choose the path
 
 - For structured Markdown or Canonical Model JSON, read `docs/authoring-guide.md`, preserve supplied content, then use `parse` (Markdown only), `validate`, and `compile`.
+- Select the profile matching the medical document type and language: `profiles/ctd/{zh-CN,en-US}/config.json` for CTD or `profiles/csr/{zh-CN,en-US}/config.json` for CSR. The profiles share the same formatting baseline but use different caption chapter levels; see the Scope section.
 - For an existing DOCX, run `loom inspect` first and review its structure and limitations. Use `loom normalize` only for recognized native Heading 1–9 paragraphs and native ordered/unordered list definitions. Always write to a different output path; never overwrite the source.
 - If heading/list semantics are uncertain, report the affected paragraphs for author confirmation. Do not infer headings from appearance or turn every `1.` or bullet-like character into a list.
 
@@ -36,6 +37,11 @@ If output is wrong, classify the evidence as a compiler/profile defect, workflow
 
 ## Scope
 
-The repository currently supplies CTD Chinese and English profiles. The engine's supported structures can be reused for other medical and non-medical documents, including CSR and protocols, but those use cases have no dedicated shipped profile or whole-document acceptance. A reusable structure does not imply compliance with an institution template, medical-writing convention, or regulatory requirement. See `README.md` for scope and `docs/docx-normalization.md` for existing-DOCX limits.
+Organize the formatting behavior in two levels:
+
+1. **Shared medical-writing formatting rules:** preserve supplied text and data; use native Word heading levels and numbering, nested ordered/unordered lists, rectangular tables, figures, chapter-based captions, cross-references, and body/table/figure lists. Apply the selected profile's implemented page, heading/list/caption style, and numbering parameters; validate the structure and inspect the result in Word.
+2. **Document-type profiles:** choose the CTD or CSR profile for the document's language. Both currently share the same page, heading-style, caption-style, cross-reference, and TOC settings. CTD captions take their chapter number from Heading 3 for tables and Heading 4 for figures, resetting the corresponding sequence at that level. CSR captions take their chapter number from Heading 1 for both tables and figures, resetting both sequences at level 1. These caption-level choices are profile settings, not different Word mechanisms.
+
+The repository supplies Chinese and English profiles for both CTD and CSR. See `README.md` for the profile paths and `docs/docx-normalization.md` for existing-DOCX limits.
 
 The Claude Code integration is an example only; this Skill and compiler are not Claude-specific.
