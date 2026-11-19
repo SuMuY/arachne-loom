@@ -14,6 +14,7 @@
 - `markerPt`：符号或序号相对页面正文左边界的位置。
 - `textPt`：正文首行和续行的统一起点，必须大于 markerPt。
 - 两者之差是编号占用的悬挂区域；默认两类都为 18/42。
+- 嵌套列表每深入一级，符号/序号和正文起点都向右移动 18 pt，保持符号与文字间距一致；该层级步长在当前版本固定。
 - 正文起点通过制表位与悬挂缩进统一，不能用填充空格代替。
 - 序号宽度会随数字位数和字体变化。要保证多位数仍有间距，应为实际最长序号保留足够的悬挂区域。
 
@@ -56,4 +57,6 @@ Word 实际画面与保存重开检查已完成，见 `heading-indentation.md` �
 
 Canonical Model 增加逐项 `level`、可选 `kind` 和层级起始值；Markdown 两空格缩进解析为最多九层。生成器对每个列表块输出一个原生 Word 多级编号定义。允许不同层级组合有序/无序，同一层级切换类型会报错，避免生成错误编号。
 
-49 项自动测试通过。`examples/quickstart/nested-lists.md` 完成 parse、validate、compile、inspect；渲染检查确认 `1 / 1.1 / 1.2 / 2 / 2.1`、子级重启、混合列表标记及缩进正确。此扩展尚未完成桌面 Microsoft Word 保存、关闭、重开验收，因此保持未发布。
+50 项自动测试通过。`examples/quickstart/nested-lists.md` 完成 parse、validate、compile、inspect。针对 Word 原生列表曾发现层级标记不递进及 normalize 压平缩进的问题，已用回归测试复现并修复：每深入一级，标记与正文起点同步右移 18 pt。九级有序/无序混合样例在 Microsoft Word for Mac 16.110.3 中打开后，标记逐级缩进，长项续行对齐；normalize 输出也保持九级缩进和续行位置。两份样例均已保存。
+
+**验收未闭环，未发布。** Word 的保存后截图通过，但用于关闭后重新打开并再次核验的 UI 自动化通道连续超时；因此不能记录保存-关闭-重开通过，也不得将此版本发布。恢复 Word 验收后，需重新打开 `/tmp/arachne-nine-levels-fixed/document.docx` 与 `/tmp/arachne-nine-levels-fixed-normalized.docx`，确认视觉结果稳定，再更新此记录和发布清单。

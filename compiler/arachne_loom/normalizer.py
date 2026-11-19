@@ -111,8 +111,9 @@ def _apply_list_geometry(doc: Document, paragraph, profile: dict[str, Any], leve
     if ind is None:
         ind = OxmlElement("w:ind")
         ppr.append(ind)
-    marker = round(geometry["markerPt"] * 20)
+    marker = round(geometry["markerPt"] * 20) + level * 360
     text = round(geometry["textPt"] * 20)
+    text += level * 360
     ind.set(qn("w:left"), str(text))
     ind.set(qn("w:hanging"), str(text - marker))
     tabs = ppr.find(qn("w:tabs"))

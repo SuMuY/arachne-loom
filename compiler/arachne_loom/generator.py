@@ -85,7 +85,7 @@ def _new_list_numbering(document: Document, items: list[dict[str, Any]], default
     for index in range(max_level + 1):
         kind = kinds.get(index, default_kind)
         geometry = profile.get("listStyle", {}).get(kind, {"markerPt": 18, "textPt": 42})
-        marker = round(geometry["markerPt"] * 20)
+        marker = round(geometry["markerPt"] * 20) + index * 360
         text = round(geometry["textPt"] * 20) + index * 360
         level = OxmlElement("w:lvl"); level.set(qn("w:ilvl"), str(index))
         ordered_path = all(kinds.get(depth, default_kind) == "ordered" for depth in range(index + 1))
@@ -403,7 +403,8 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
                 if kind == "list":
                     level = item.get("level", 0)
                     geometry = profile.get("listStyle", {}).get(item.get("kind", block["kind"]), {"markerPt": 18, "textPt": 42})
-                    marker, text = round(geometry["markerPt"] * 20), round(geometry["textPt"] * 20) + level * 360
+                    marker = round(geometry["markerPt"] * 20) + level * 360
+                    text = round(geometry["textPt"] * 20) + level * 360
                     _bind_heading_numbering(paragraph, level + 1, list_num)
                     paragraph.paragraph_format.left_indent = Pt(text / 20)
                     paragraph.paragraph_format.first_line_indent = Pt((marker - text) / 20)
