@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arachne-loom.dev/schema/csr-profile-0.0.1.json",
+  "title": "CSR profile (provisional)",
+  "type": "object",
+  "required": ["configId", "page", "body", "styles", "caption", "capabilities"],
+  "properties": {
+    "configId": {"type": "string"},
+    "page": {"type": "object"}, "body": {"type": "object"},
+    "styles": {"type": "object", "required": ["roles"]},
+    "headingStyle": {
+      "type": "object",
+      "properties": {
+        "italic": {"type": "boolean"},
+        "indentation": {
+          "type": "object", "additionalProperties": false,
+          "required": ["basePt", "incrementPt", "hangingPt"],
+          "properties": {
+            "basePt": {"type": "number", "minimum": 0},
+            "incrementPt": {"type": "number", "minimum": 0},
+            "hangingPt": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "listStyle": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "ordered": {"$ref": "#/$defs/listGeometry"},
+        "unordered": {"$ref": "#/$defs/listGeometry"}
+      }
+    },
+    "captionStyle": {"type": "object"},
+    "caption": {"type": "object", "required": ["table", "figure"]},
+    "capabilities": {"type": "object", "required": ["literatureCitations"]}
+  }
+,
+  "$defs": {
+    "listGeometry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["markerPt", "textPt"],
+      "properties": {
+        "markerPt": {"type": "number", "minimum": 0},
+        "textPt": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "description": "textPt must exceed markerPt (also checked by runtime validation)."
+    }
+  }
+}

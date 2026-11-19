@@ -16,7 +16,7 @@
 
 **已有 DOCX 的格式规范化是有限的辅助能力，不是主工作流。** `loom normalize` 可以统一文档中已存在的原生标题和原生列表的缩进等几何格式，并另存为新文件；它不负责把任意 Word 转换成结构化输入，也不会猜测手打编号、圆点或视觉上像标题的正文含义。
 
-底层机制可复用于非医学文档，也可用于 CSR、临床试验方案等医学文档中的受支持结构。仓库目前提供 CTD 中英文配置，尚未交付单独的通用、CSR 或方案配置及相应全文验收。
+底层机制可用于医学文档中的受支持结构。仓库提供 CTD 和 CSR 的中英文配置；CSR 配置当前逐项复用 CTD 对应语言版本的格式参数，后续可独立调整。
 
 ### 哪些是通用能力？
 
@@ -37,10 +37,13 @@
 
 **CTD profile 是本仓库的排版预设，不是所有医学文件的统一规范。** 它包含中英文样式映射、默认字体/页面参数、题注外观，以及按章节组织图表编号的规则。当前默认表题依赖三级标题，图题依赖四级标题；依赖层级可调整。是否适合具体申办方或项目，须对照其模板确认。
 
+仓库也提供独立的 CSR 中英文配置分支。当前 CSR 配置从对应语言的 CTD 配置复制，所有格式参数相同，仅配置身份标记不同；后续 CSR 专属格式要求可在 `profiles/csr/` 单独调整，不影响 CTD 配置。
+
 | 文档场景 | 当前适用方式 |
 | --- | --- |
 | CTD 文档 | 使用已提供的 CTD 配置；仍按目标项目模板核对参数及受支持结构 |
-| CSR、临床试验方案等 | 可复用标题、列表、图表及引用机制；须调整配置并以目标文档验收，目前无专用成品配置 |
+| CSR | 使用独立 CSR 配置；当前格式参数与对应语言的 CTD 配置一致，后续可单独调整 |
+| 临床试验方案等 | 可复用标题、列表、图表及引用机制；按目标文档要求选择并核对格式参数 |
 | 非医学报告 | 可使用相同机制生成受支持结构；独立通用配置尚未提供 |
 
 例如，CSR 若采用 `1 / 1.1` 标题和按章图表编号，可以复用相应机制；若要求图表全篇连续编号、横向大表、合并表头、复杂页眉页脚、修订或文献管理域，则需要先补齐对应能力。工具不检查 CSR 内容完整性或监管要求。
@@ -71,7 +74,7 @@
 **What it is.** Primarily a deterministic, AI-free generator: it compiles explicitly structured content into a `.docx` with native Word headings, up-to-9-level lists, `SEQ`/`REF`/`TOC` fields, and bookmarks. Existing-DOCX normalization is a limited secondary path for recognized native headings and lists.
 
 **I/O contract.**
-- **Input:** a Canonical Model (JSON), *or* CTD-Markdown that `parse` converts into one — plus a formatting profile and a task config (CTD presets are currently supplied). The Canonical Model is the single semantic contract; the compiler never re-guesses meaning from Markdown.
+- **Input:** a Canonical Model (JSON), *or* CTD-Markdown that `parse` converts into one — plus a formatting profile and a task config (CTD and CSR profiles are supplied). The Canonical Model is the single semantic contract; the compiler never re-guesses meaning from Markdown.
 - **Output:** `document.docx` + `expected-manifest.json` + `actual-manifest.json` + `acceptance-report.json` + `unresolved-issues.json`.
 
 **Commands.**
@@ -233,6 +236,7 @@ arachne-loom/
 ├── compiler/            the loom — deterministic CLI/library (no AI dependency)
 │   └── arachne_loom/    parser · model · generator · fields · validator · inspector
 ├── profiles/ctd/        CTD formatting profile (config, contract, failure catalog)
+├── profiles/csr/        CSR formatting profile (independent, initially matches CTD)
 ├── docs/                first-principles, three-gates, Word primitives, acceptance log
 ├── examples/quickstart/ runnable sample + tested artifacts + negative fixtures
 └── integrations/        thin, workbench-neutral wrappers (generic-cli, claude-code)

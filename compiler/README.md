@@ -1,6 +1,6 @@
 # Compiler
 
-The compiler is the deterministic core of `arachne-loom`. It has no AI dependency and accepts a Canonical Model JSON, a CTD profile, and a generation task.
+The compiler is the deterministic core of `arachne-loom`. It has no AI dependency and accepts a Canonical Model JSON, a document-format profile, and a generation task. CTD and CSR profiles are supplied.
 
 ## Run from source
 
@@ -20,7 +20,8 @@ PYTHONPATH=. python -m arachne_loom.cli inspect /tmp/arachne-loom-build/document
 
 - Canonical Model: `arachne_loom/model.schema.json`
 - Generation task: `schemas/generation-task.schema.json`
-- CTD profile: `../profiles/ctd/zh-CN/config.json` or `../profiles/ctd/en-US/config.json`
+- CTD profiles: `../profiles/ctd/zh-CN/config.json` or `../profiles/ctd/en-US/config.json`
+- CSR profiles: `../profiles/csr/zh-CN/config.json` or `../profiles/csr/en-US/config.json`
 
 Markdown is only an input adapter. For production pipelines, preserve the generated model JSON and manifests as review artifacts.
 
