@@ -8,16 +8,22 @@
 
 ---
 
-## 适用范围：通用排版能力与医学文档配置
+## 适用范围：从结构化内容生成 Word 文档
 
-**当前定位：以 CTD 为首个配置场景的结构化 Word 生成工具。底层机制可复用于非医学文档，也可用于 CSR、临床试验方案等医学文档中的受支持结构。仓库目前提供 CTD 中英文配置，尚未交付单独的通用、CSR 或方案配置及相应全文验收。**
+**首选用途是从明确的结构化内容生成 Word 原生结构的 `.docx`。** 调用方先提供标题、段落、列表、表格/图片及其引用关系，`arachne-loom` 再按配置生成真正可由 Word 更新的标题编号、列表、题注、交叉引用和目录。这条路径最可靠，因为文档结构由输入明确给出，不需要从成品外观反推作者意图。
+
+“Word 原生结构”表示编号、列表和引用由 Word 对象管理，不等于自动符合任意机构模板、医学写作规范或监管要求。输出是否满足目标模板，仍须选择并核对相应配置，再用桌面 Word 验收。
+
+**已有 DOCX 的格式规范化是有限的辅助能力，不是主工作流。** `loom normalize` 可以统一文档中已存在的原生标题和原生列表的缩进等几何格式，并另存为新文件；它不负责把任意 Word 转换成结构化输入，也不会猜测手打编号、圆点或视觉上像标题的正文含义。
+
+底层机制可复用于非医学文档，也可用于 CSR、临床试验方案等医学文档中的受支持结构。仓库目前提供 CTD 中英文配置，尚未交付单独的通用、CSR 或方案配置及相应全文验收。
 
 ### 哪些是通用能力？
 
 | 能力 | 可复用范围与现有支持 |
 | --- | --- |
 | 标题层级、编号、缩进 | 支持 1–9 级标题及逐级缩进；编号目前采用 `1 / 1.1 / 1.1.1` |
-| 有序、无序列表 | 单层原生列表；全文统一标记位置、正文起点和续行缩进；支持独立起始编号 |
+| 有序、无序列表 | 最多 9 层原生嵌套列表；统一符号/序号位置、正文起点和续行缩进；支持独立起始编号 |
 | 图表题注与交叉引用 | 原生 `STYLEREF`、`SEQ`、`REF` 域及书签；对象移动后由 Word 管理编号与引用 |
 | 目录 | 正文目录、图目录、表目录；目录域需在 Word 中更新 |
 | 页面与正文基础设置 | A4/Letter、页边距、正文字体与字号；标题/列表缩进及题注的部分样式可配置 |
@@ -50,9 +56,9 @@
 
 ### 能否拿任意已有 Word 直接统一格式？
 
-**当前没有完整的 DOCX 导入或原位格式统一入口。** `parse` 读取约定的 Markdown，`compile` 读取 Canonical Model JSON；`inspect` 能检查 DOCX 的部分结构，但不输出可供编译器重建全文的模型。基础模板 `baseTemplate` 也不是源文档导入器。
+**不能把 `arachne-loom` 当作任意 Word 的自动格式修复器。** 当前有一个有限的 `loom normalize` 入口：它读取已有 DOCX 中可识别的 Word 原生 Heading 1–9 标题和原生有序/无序列表，按配置调整几何格式，并写入另一个输出文件。它不会导入并重建全文，也不处理任意 Word 结构。
 
-将已有 Word 的内容和关系先整理成受支持模型，再生成新 Word，是可探索的转换流程；当前尚未提供经过验证的自动转换器。对于现有原生标题/列表，可探索保留结构直接调整样式；对于手打编号、普通字符圆点或仅靠字号模拟标题的文件，则需识别语义并处理歧义。两种路径都需要专门验证。
+`parse` 读取约定的 Markdown，`compile` 读取 Canonical Model JSON；`inspect` 检查 DOCX 的部分结构，但不输出可供编译器重建全文的模型。对于已有文档，若其内容和关系先被整理成受支持模型，可以重新生成一个新 Word；目前没有经过验证的自动转换器。手打编号、普通字符圆点或仅靠字号模拟标题的内容不会被 `normalize` 自动转换成 Word 原生列表或标题。
 
 验证应使用代表性 `.docx` 和目标模板/格式要求，先盘点标题、列表、表格、图片、题注、引用、分节及修订，再比较处理前后正文、表格数据、对象关系和 Word 实际行为。真实项目文件留在仓库外；公开测试只使用合成或经确认脱敏的样例。具体文件能否可靠处理，要以这个测试结果判断。
 
@@ -62,7 +68,7 @@
 
 <sub>Dense summary for agents and readers in a hurry. Prose and diagrams follow below.</sub>
 
-**What it is.** A deterministic, AI-free CLI/library that compiles a semantic model into a `.docx` with native `SEQ`/`REF`/`TOC` fields, bookmarks, and multilevel heading numbering.
+**What it is.** Primarily a deterministic, AI-free generator: it compiles explicitly structured content into a `.docx` with native Word headings, up-to-9-level lists, `SEQ`/`REF`/`TOC` fields, and bookmarks. Existing-DOCX normalization is a limited secondary path for recognized native headings and lists.
 
 **I/O contract.**
 - **Input:** a Canonical Model (JSON), *or* CTD-Markdown that `parse` converts into one — plus a formatting profile and a task config (CTD presets are currently supplied). The Canonical Model is the single semantic contract; the compiler never re-guesses meaning from Markdown.
