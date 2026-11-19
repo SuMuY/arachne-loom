@@ -74,7 +74,10 @@ loom parse    <input.md> -o <model.json>
 loom validate <model.json> <profile.json> <task.json>
 loom compile  <model.json> <profile.json> <task.json> --out-dir <dir>
 loom inspect  <document.docx> -o <actual-manifest.json>
+loom normalize <existing.docx> <profile.json> --out <normalized.docx>
 ```
+
+`normalize` is a conservative existing-DOCX path: it adjusts geometry for recognized native Heading 1–9 paragraphs and native ordered/unordered lists, while preserving the source file and unrelated package parts. It does not infer headings from appearance or convert hand-typed numbering, and it does not claim support for arbitrary Word constructs. Always choose an output path different from the input, inspect the report, and verify the result in desktop Word. See [DOCX normalization limits](docs/docx-normalization.md).
 
 **Minimal CTD-Markdown input** (headings carry explicit chapter numbers; every table/figure has a stable `id`; cross-references use `[@id]`, never a typed number):
 ````md

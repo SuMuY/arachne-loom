@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .generator import compile_document
 from .inspector import inspect_to_file
+from .normalizer import normalize_to_file
 from .parser import ParseError, parse_to_file
 from .validator import ValidationError, load_json, validate
 
@@ -18,6 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     validate_p = commands.add_parser("validate"); validate_p.add_argument("model"); validate_p.add_argument("profile"); validate_p.add_argument("task")
     compile_p = commands.add_parser("compile"); compile_p.add_argument("model"); compile_p.add_argument("profile"); compile_p.add_argument("task"); compile_p.add_argument("--out-dir", required=True)
     inspect_p = commands.add_parser("inspect"); inspect_p.add_argument("document"); inspect_p.add_argument("-o", "--output", required=True)
+    normalize_p = commands.add_parser("normalize"); normalize_p.add_argument("document"); normalize_p.add_argument("profile"); normalize_p.add_argument("--out", required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "parse": parse_to_file(args.input, args.output)
@@ -33,7 +35,10 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "compile":
             output = compile_document(load_json(args.model), load_json(args.profile), load_json(args.task), args.out_dir, args.model, args.profile, args.task)
             print(output)
-        else: inspect_to_file(args.document, args.output)
+        elif args.command == "inspect": inspect_to_file(args.document, args.output)
+        else:
+            report = normalize_to_file(args.document, args.out, args.profile)
+            print(json.dumps(report, ensure_ascii=False))
     except (ParseError, ValidationError, ValueError, FileNotFoundError) as exc:
         print(str(exc), file=sys.stderr); return 2
     return 0
