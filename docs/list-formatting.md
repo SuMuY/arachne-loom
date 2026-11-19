@@ -57,6 +57,14 @@ Word 实际画面与保存重开检查已完成，见 `heading-indentation.md` �
 
 Canonical Model 增加逐项 `level`、可选 `kind` 和层级起始值；Markdown 两空格缩进解析为最多九层。生成器对每个列表块输出一个原生 Word 多级编号定义。允许不同层级组合有序/无序，同一层级切换类型会报错，避免生成错误编号。
 
-50 项自动测试通过。`examples/quickstart/nested-lists.md` 完成 parse、validate、compile、inspect。针对 Word 原生列表曾发现层级标记不递进及 normalize 压平缩进的问题，已用回归测试复现并修复：每深入一级，标记与正文起点同步右移 18 pt。九级有序/无序混合样例在 Microsoft Word for Mac 16.110.3 中打开后，标记逐级缩进，长项续行对齐；normalize 输出也保持九级缩进和续行位置。两份样例均已保存。
+早期扩展运行过 50 项自动测试；最新复验为 54 项通过。`examples/quickstart/nested-lists.md` 完成 parse、validate、compile、inspect。针对 Word 原生列表曾发现层级标记不递进及 normalize 压平缩进的问题，已用回归测试复现并修复：每深入一级，标记与正文起点同步右移 18 pt。生成版九级样例曾在 Microsoft Word for Mac 16.110.3 中检查逐级缩进；normalize 曾误打开旧路径，且保存动作没有文件写入证据，因此撤回两份样例均已保存及 normalize 视觉通过的结论，必须重新实测。
 
-**验收未闭环，未发布。** Word 的保存后截图通过，但用于关闭后重新打开并再次核验的 UI 自动化通道连续超时；因此不能记录保存-关闭-重开通过，也不得将此版本发布。恢复 Word 验收后，需重新打开 `/tmp/arachne-nine-levels-fixed/document.docx` 与 `/tmp/arachne-nine-levels-fixed-normalized.docx`，确认视觉结果稳定，再更新此记录和发布清单。
+**验收未闭环，未发布。** Word UI 自动化通道连续超时；不能记录保存-关闭-重开通过。恢复 Word 验收后，需重新生成并打开九级生成与 normalize 样例，确认实际保存、关闭、重开后的视觉结果稳定，再更新此记录和发布清单。
+
+## 独立行为复验（2026-11-19）
+
+- 外部原生三层列表的段落直接缩进和制表位会覆盖编号定义，导致旧实现报告成功但视觉仍平齐。修复同时更新目标段落与编号定义，清除互斥首行/字符缩进覆盖；三层正文起点和编号制表位实测为 840/1200/1560 twip，悬挂区域均为 480 twip。
+- 解析器和验证器此前接受 `[0,1,2,0,2]` 局部跳级。新增两个失败测试后，改为比较上一项层级；两条 CLI 路径实测均返回 2 并指出跳级位置。
+- 独立 reviewer 重跑 parse → validate → compile → inspect 与 normalize：10 个列表项、三级标题、混合层级、独立列表、表格和引用检查通过，`structuralIssues=[]`。normalize 保留手打编号、剂量、普通加粗段落、源文件哈希和非目标 ZIP 部件字节。
+- 根目录 `SKILL.md` 为通用入口，已补安装/命令、任务样例和列表规范导航；删除 Claude 专属 workflow，集成目录仅保留示例说明。
+- 自动化：`pytest -q compiler/tests` 为 54 passed；敏感信息扫描及 Skill metadata 校验通过。Word 视觉及保存重开仍是未关闭的发布门禁。

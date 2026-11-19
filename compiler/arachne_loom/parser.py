@@ -81,6 +81,7 @@ def parse_markdown(path: str | Path) -> dict[str, Any]:
                      "start": int(marker[:-1]) if marker[0].isdigit() else 1, "items": []}
             first_at_level: dict[int, int] = {}
             kind_at_level: dict[int, str] = {}
+            previous_level = 0
             while i < len(lines):
                 raw = lines[i]
                 match = LIST_ITEM.match(raw.strip())
@@ -90,8 +91,9 @@ def parse_markdown(path: str | Path) -> dict[str, Any]:
                 if indent < first_indent or (indent - first_indent) % 2:
                     raise ParseError(f"list indentation must use two-space levels at line {i+1}")
                 level = (indent - first_indent) // 2
-                if level > max(first_at_level, default=0) + (0 if level in first_at_level else 1):
+                if level > previous_level + 1:
                     raise ParseError(f"list level jumps at line {i+1}")
+                previous_level = level
                 item_marker, item_content = match.groups()
                 item_kind = "ordered" if item_marker[0].isdigit() else "unordered"
                 if level in kind_at_level and kind_at_level[level] != item_kind:

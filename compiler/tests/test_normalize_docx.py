@@ -112,3 +112,30 @@ def test_nested_list_marker_and_text_geometry_steps_together_before_and_after_no
     assert_progressive_geometry(generated)
     normalize_docx(generated, normalized, profile)
     assert_progressive_geometry(normalized)
+
+
+def test_normalize_replaces_direct_list_geometry_that_overrides_native_numbering(tmp_path):
+    from docx.oxml import OxmlElement
+    from docx.shared import Pt
+
+    source = tmp_path / 'external.docx'
+    output = tmp_path / 'normalized.docx'
+    doc = Document()
+    paragraph = doc.add_paragraph('External native item', style='List Number')
+    paragraph.paragraph_format.left_indent = Pt(180)
+    paragraph.paragraph_format.first_line_indent = Pt(20)
+    tabs = OxmlElement('w:tabs')
+    tab = OxmlElement('w:tab')
+    tab.set(qn('w:val'), 'num')
+    tab.set(qn('w:pos'), '3600')
+    tabs.append(tab)
+    paragraph._p.get_or_add_pPr().append(tabs)
+    doc.save(source)
+    before = source.read_bytes()
+    normalize_docx(source, output, {'listStyle': {'ordered': {'markerPt': 18, 'textPt': 42}}})
+    result = Document(output).paragraphs[0]
+    assert result.text == paragraph.text
+    assert result.paragraph_format.left_indent == Pt(42)
+    assert result.paragraph_format.first_line_indent == Pt(-24)
+    assert result._p.xpath('./w:pPr/w:tabs/w:tab[@w:val="num"]')[0].get(qn('w:pos')) == '840'
+    assert source.read_bytes() == before

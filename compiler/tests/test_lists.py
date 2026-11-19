@@ -170,3 +170,21 @@ def test_numbering_definitions_precede_instances(tmp_path):
             seen_instance = True
         if child.tag == qn('w:abstractNum'):
             assert not seen_instance, 'abstractNum after num violates CT_Numbering order'
+
+
+def test_list_jump_after_return_to_parent_is_rejected(tmp_path):
+    from arachne_loom.parser import ParseError
+
+    source = tmp_path / 'jump.md'
+    source.write_text('1. Parent\n  1. Child\n    1. Grandchild\n2. Parent\n    1. Missing child\n')
+    with pytest.raises(ParseError, match='list level jumps'):
+        parse_markdown(source)
+
+
+def test_model_list_jump_after_return_to_parent_is_rejected():
+    model, profile, task = fixture()
+    model['blocks'] = [{'type': 'list', 'kind': 'ordered', 'items': [
+        {'level': level, 'inlines': [{'type': 'text', 'text': 'Item'}]}
+        for level in [0, 1, 2, 0, 2]
+    ]}]
+    assert any('list level jumps' in error for error in validate(model, profile, task))

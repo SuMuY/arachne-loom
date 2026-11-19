@@ -12,6 +12,6 @@ The wrapper runs `validate` and then `compile`. It requires `PYTHONPATH`-style s
 
 ## Required example integration: Claude Code
 
-The assembly instructions require one `claude-code` example. Read `claude-code/workflow.md` to see how a workbench can produce CTD-Markdown or Canonical Model JSON, invoke the shared generic CLI, and give a separate review role only the requirement, manifests, and DOCX. This is an example adapter, not a dependency or a change in project target.
+The repository-root `SKILL.md` is the canonical, workbench-neutral agent instruction. The `claude-code` directory contains only example CLI usage; it adds no Claude SDK dependency.
 
 Other workbenches can use the same three CLI commands without importing an AI SDK.

@@ -104,7 +104,7 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
             elif any(not isinstance(item, dict) or not isinstance(item.get("inlines"), list) or not item["inlines"] for item in items):
                 errors.append(f"block {position}: list items require non-empty inlines")
             else:
-                max_seen = 0
+                previous_list_level = 0
                 for item_index, item in enumerate(items, start=1):
                     level = item.get("level", 0)
                     item_kind = item.get("kind", block.get("kind"))
@@ -113,10 +113,10 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
                         errors.append(f"block {position} item {item_index}: list level must be 0..8")
                     elif item_index == 1 and level != 0:
                         errors.append(f"block {position} item {item_index}: list level must begin at level 0")
-                    elif level > max_seen + 1:
-                        errors.append(f"block {position} item {item_index}: list level jumps from {max_seen} to {level}")
+                    elif level > previous_list_level + 1:
+                        errors.append(f"block {position} item {item_index}: list level jumps from {previous_list_level} to {level}")
                     else:
-                        max_seen = max(max_seen, level)
+                        previous_list_level = level
                     if item_kind not in {"ordered", "unordered"}:
                         errors.append(f"block {position} item {item_index}: list kind must be ordered or unordered")
                     elif isinstance(level, int) and not isinstance(level, bool):

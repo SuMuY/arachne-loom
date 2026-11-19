@@ -75,6 +75,28 @@ def _list_level(paragraph, numbering) -> tuple[str, int, int] | None:
     return kind, num_id, level
 
 
+def _set_list_geometry(ppr, marker: int, text: int) -> None:
+    ind = ppr.find(qn('w:ind'))
+    if ind is None:
+        ind = OxmlElement('w:ind')
+        ppr.append(ind)
+    for name in ('firstLine', 'firstLineChars', 'hangingChars', 'leftChars', 'start', 'startChars'):
+        ind.attrib.pop(qn('w:' + name), None)
+    ind.set(qn('w:left'), str(text))
+    ind.set(qn('w:hanging'), str(text - marker))
+    tabs = ppr.find(qn('w:tabs'))
+    if tabs is None:
+        tabs = OxmlElement('w:tabs')
+        ppr.append(tabs)
+    for tab in list(tabs):
+        if tab.get(qn('w:val')) == 'num':
+            tabs.remove(tab)
+    tab = OxmlElement('w:tab')
+    tab.set(qn('w:val'), 'num')
+    tab.set(qn('w:pos'), str(text))
+    tabs.append(tab)
+
+
 def _apply_list_geometry(doc: Document, paragraph, profile: dict[str, Any], level: int) -> bool:
     item = _list_level(paragraph, doc.part.numbering_part.element)
     if item is None:
@@ -83,16 +105,10 @@ def _apply_list_geometry(doc: Document, paragraph, profile: dict[str, Any], leve
     geometry = profile.get("listStyle", {}).get(kind)
     if not geometry:
         geometry = {"markerPt": 18, "textPt": 42}
+    marker = round(geometry["markerPt"] * 20) + level * 360
+    text = round(geometry["textPt"] * 20) + level * 360
+    _set_list_geometry(paragraph._p.get_or_add_pPr(), marker, text)
     if num_id == -1:
-        ppr = paragraph._p.get_or_add_pPr()
-        ind = ppr.find(qn("w:ind"))
-        if ind is None:
-            ind = OxmlElement("w:ind")
-            ppr.append(ind)
-        marker = round(geometry["markerPt"] * 20)
-        text = round(geometry["textPt"] * 20)
-        ind.set(qn("w:left"), str(text))
-        ind.set(qn("w:hanging"), str(text - marker))
         return True
     numbering = doc.part.numbering_part.element
     num = numbering.find(f"{qn('w:num')}[@{qn('w:numId')}='{num_id}']")
@@ -105,25 +121,7 @@ def _apply_list_geometry(doc: Document, paragraph, profile: dict[str, Any], leve
     if ppr is None:
         ppr = OxmlElement("w:pPr")
         lvl.append(ppr)
-    for existing_tabs in list(ppr.findall(qn("w:tabs"))):
-        ppr.remove(existing_tabs)
-    ind = ppr.find(qn("w:ind"))
-    if ind is None:
-        ind = OxmlElement("w:ind")
-        ppr.append(ind)
-    marker = round(geometry["markerPt"] * 20) + level * 360
-    text = round(geometry["textPt"] * 20)
-    text += level * 360
-    ind.set(qn("w:left"), str(text))
-    ind.set(qn("w:hanging"), str(text - marker))
-    tabs = ppr.find(qn("w:tabs"))
-    if tabs is None:
-        tabs = OxmlElement("w:tabs")
-        ppr.append(tabs)
-    tab = OxmlElement("w:tab")
-    tab.set(qn("w:val"), "num")
-    tab.set(qn("w:pos"), str(text))
-    tabs.append(tab)
+    _set_list_geometry(ppr, marker, text)
     return True
 
 
