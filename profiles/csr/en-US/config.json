@@ -21,8 +21,8 @@
   }},
   "caption": {
     "labelMode": "auto", "useNativeFields": true, "numberingFormula": "chapter-sequence", "separator": "-", "crossReferenceDisplay": "labelAndNumber", "tablePosition": "above", "figurePosition": "below",
-    "table": {"sequenceIdentifier": "Table", "labels": {"zh-CN": "表", "en-US": "Table"}, "captionStyleRole": "caption", "position": "above", "chapterStyleRole": "headingLevel3", "sequenceResetLevel": 3, "separator": "-"},
-    "figure": {"sequenceIdentifier": "Figure", "labels": {"zh-CN": "图", "en-US": "Figure"}, "captionStyleRole": "caption", "position": "below", "chapterStyleRole": "headingLevel4", "sequenceResetLevel": 4, "separator": "-"}
+    "table": {"sequenceIdentifier": "Table", "labels": {"zh-CN": "表", "en-US": "Table"}, "captionStyleRole": "caption", "position": "above", "chapterStyleRole": "headingLevel1", "sequenceResetLevel": 1, "separator": "-"},
+    "figure": {"sequenceIdentifier": "Figure", "labels": {"zh-CN": "图", "en-US": "Figure"}, "captionStyleRole": "caption", "position": "below", "chapterStyleRole": "headingLevel1", "sequenceResetLevel": 1, "separator": "-"}
   },
   "captionStyle": {"fontSizePt": 12, "bold": true, "italic": false, "alignment": "center", "spaceBeforePt": 0, "spaceAfterPt": 6, "lineSpacing": 1},
   "references": {"useNativeFields": true, "color": "#0000FF", "underline": true, "characterStyleId": "Hyperlink", "characterStyleName": "Hyperlink", "requireClickable": true},

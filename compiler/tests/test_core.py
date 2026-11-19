@@ -71,6 +71,22 @@ def test_explicit_toc_depth_and_presentation(tmp_path):
     assert caption.alignment == 1
 
 
+def test_csr_captions_use_top_level_chapter_number(tmp_path):
+    model = parse_markdown(PACKAGE / "examples/quickstart/sample.md")
+    heading = next(block for block in model["blocks"] if block["type"] == "heading")
+    heading["level"] = 1
+    heading["numberPath"] = ["1"]
+    profile = json.loads((PACKAGE / "profiles/csr/zh-CN/config.json").read_text())
+    task = json.loads((PACKAGE / "examples/quickstart/config.json").read_text())
+    task["baseTemplate"] = str(BASE)
+    task["resourceRoot"] = str(PACKAGE / "examples/quickstart")
+    output = compile_document(model, profile, task, tmp_path / "csr")
+    actual = inspect(output / "document.docx")
+    assert 'STYLEREF "标题 1" \\s \\* MERGEFORMAT' in actual["fields"]
+    assert "SEQ Table \\s 1 \\* ARABIC" in actual["fields"]
+    assert actual["structuralIssues"] == []
+
+
 def test_inspector_detects_crossing_bookmark(tmp_path):
     source = PACKAGE / "examples/quickstart/negative-fixtures/document-word-broken.docx"
     actual = inspect(source)
