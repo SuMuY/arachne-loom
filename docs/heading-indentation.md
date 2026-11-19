@@ -8,7 +8,7 @@ multilevel numbering, rather than typed spaces or tabs in heading text.
 | --- | --- |
 | `basePt` | Level-1 number's left position, relative to the page's text margin |
 | `incrementPt` | Additional inset per semantic heading level |
-| `hangingPt` | Distance from number anchor to text and continuation-line start |
+| `hangingPt` | Reserved number width from the level anchor to text and continuation-line start |
 
 For semantic level L, the number anchor is `basePt + (L - 1) * incrementPt`;
 the text starts at that anchor plus `hangingPt`. Values are rounded to Word's
@@ -28,8 +28,12 @@ This feature applies during generation; it does not reformat an existing DOCX.
 Use `examples/quickstart/indented-profile.json` with
 `examples/quickstart/indented-headings.md`, following the README commands.
 The example includes repeated levels and a long heading for wrap verification.
-Choose a hanging area wide enough for the longest number in the actual font;
-Word advances past the tab if a number outgrows that area.
+Choose the smallest hanging area that fits the widest rendered number at that
+level in the target font, including the longest expected multilevel label (for
+example `10.12.3`). Do not use a large fixed width such as 72 pt without a
+measured need: the suffix tab places the heading text at `anchor + hangingPt`,
+so an oversized value creates a visibly large number-to-text gap. Confirm the
+result and wrapped-line alignment in desktop Word.
 
 ## Verification
 
