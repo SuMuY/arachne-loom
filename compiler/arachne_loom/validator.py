@@ -103,6 +103,29 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
                 errors.append(f"block {position}: list requires non-empty items")
             elif any(not isinstance(item, dict) or not isinstance(item.get("inlines"), list) or not item["inlines"] for item in items):
                 errors.append(f"block {position}: list items require non-empty inlines")
+            else:
+                max_seen = 0
+                for item_index, item in enumerate(items, start=1):
+                    level = item.get("level", 0)
+                    item_kind = item.get("kind", block.get("kind"))
+                    item_start = item.get("start", 1)
+                    if isinstance(level, bool) or not isinstance(level, int) or not 0 <= level <= 8:
+                        errors.append(f"block {position} item {item_index}: list level must be 0..8")
+                    elif item_index == 1 and level != 0:
+                        errors.append(f"block {position} item {item_index}: list level must begin at level 0")
+                    elif level > max_seen + 1:
+                        errors.append(f"block {position} item {item_index}: list level jumps from {max_seen} to {level}")
+                    else:
+                        max_seen = max(max_seen, level)
+                    if item_kind not in {"ordered", "unordered"}:
+                        errors.append(f"block {position} item {item_index}: list kind must be ordered or unordered")
+                    elif isinstance(level, int) and not isinstance(level, bool):
+                        previous_kind = next((prior.get("kind", block.get("kind")) for prior in items[:item_index - 1]
+                                              if prior.get("level", 0) == level), None)
+                        if previous_kind is not None and previous_kind != item_kind:
+                            errors.append(f"block {position} item {item_index}: list kind cannot change within level {level}")
+                    if isinstance(item_start, bool) or not isinstance(item_start, int) or not 1 <= item_start <= 2147483647:
+                        errors.append(f"block {position} item {item_index}: list start must be a positive 32-bit integer")
         if kind == "list" and (not isinstance(block.get("items"), list) or any(not isinstance(item, dict) or not isinstance(item.get("inlines"), list) for item in block["items"])):
             continue
         if kind in {"paragraph", "list"}:

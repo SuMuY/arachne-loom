@@ -66,25 +66,44 @@ def _heading_geometry(profile: dict[str, Any], level: int) -> tuple[int, int] | 
     return round((anchor + config["hangingPt"]) * 20), round(config["hangingPt"] * 20)
 
 
-def _new_list_numbering(document: Document, kind: str, start: int, marker: int, text: int) -> int:
-    """Each list has its own sequence; all lists of one kind share geometry."""
+def _new_list_numbering(document: Document, items: list[dict[str, Any]], default_kind: str,
+                        start: int, profile: dict[str, Any]) -> int:
+    """Create one native multilevel numbering definition for a list block."""
     numbering = document.part.numbering_part.element
     abstract_id = max((int(n.get(qn("w:abstractNumId"))) for n in numbering.findall(qn("w:abstractNum"))), default=0) + 1
     num_id = max((int(n.get(qn("w:numId"))) for n in numbering.findall(qn("w:num"))), default=0) + 1
     abstract = OxmlElement("w:abstractNum")
     abstract.set(qn("w:abstractNumId"), str(abstract_id))
-    multi = OxmlElement("w:multiLevelType"); multi.set(qn("w:val"), "singleLevel"); abstract.append(multi)
-    level = OxmlElement("w:lvl"); level.set(qn("w:ilvl"), "0")
-    for tag, value in [("start", str(start) if kind == "ordered" else "1"),
-                       ("numFmt", "decimal" if kind == "ordered" else "bullet"),
-                       ("suff", "tab"), ("lvlText", "%1." if kind == "ordered" else "•"), ("lvlJc", "left")]:
-        child = OxmlElement(f"w:{tag}"); child.set(qn("w:val"), value); level.append(child)
-    ppr = OxmlElement("w:pPr")
-    tabs = OxmlElement("w:tabs"); tab = OxmlElement("w:tab")
-    tab.set(qn("w:val"), "num"); tab.set(qn("w:pos"), str(text)); tabs.append(tab); ppr.append(tabs)
-    ind = OxmlElement("w:ind")
-    ind.set(qn("w:left"), str(text)); ind.set(qn("w:hanging"), str(text-marker)); ppr.append(ind)
-    level.append(ppr); abstract.append(level); numbering.insert_element_before(abstract, "w:num", "w:numIdMacAtCleanup")
+    multi = OxmlElement("w:multiLevelType"); multi.set(qn("w:val"), "multilevel"); abstract.append(multi)
+    max_level = max((item.get("level", 0) for item in items), default=0)
+    starts: dict[int, int] = {}
+    kinds: dict[int, str] = {}
+    for item in items:
+        item_level = item.get("level", 0)
+        starts.setdefault(item_level, item.get("start", start if item_level == 0 else 1))
+        kinds.setdefault(item_level, item.get("kind", default_kind))
+    for index in range(max_level + 1):
+        kind = kinds.get(index, default_kind)
+        geometry = profile.get("listStyle", {}).get(kind, {"markerPt": 18, "textPt": 42})
+        marker = round(geometry["markerPt"] * 20)
+        text = round(geometry["textPt"] * 20) + index * 360
+        level = OxmlElement("w:lvl"); level.set(qn("w:ilvl"), str(index))
+        ordered_path = all(kinds.get(depth, default_kind) == "ordered" for depth in range(index + 1))
+        ordered_label = (".".join(f"%{depth}" for depth in range(1, index + 2))
+                         if ordered_path else f"%{index + 1}") + "."
+        for tag, value in [("start", str(starts.get(index, 1))),
+                           ("numFmt", "decimal" if kind == "ordered" else "bullet"),
+                           ("suff", "tab"),
+                           ("lvlText", ordered_label if kind == "ordered" else "•"),
+                           ("lvlJc", "left")]:
+            child = OxmlElement(f"w:{tag}"); child.set(qn("w:val"), value); level.append(child)
+        ppr = OxmlElement("w:pPr")
+        tabs = OxmlElement("w:tabs"); tab = OxmlElement("w:tab")
+        tab.set(qn("w:val"), "num"); tab.set(qn("w:pos"), str(text)); tabs.append(tab); ppr.append(tabs)
+        ind = OxmlElement("w:ind")
+        ind.set(qn("w:left"), str(text)); ind.set(qn("w:hanging"), str(text-marker)); ppr.append(ind)
+        level.append(ppr); abstract.append(level)
+    numbering.insert_element_before(abstract, "w:num", "w:numIdMacAtCleanup")
     num = OxmlElement("w:num"); num.set(qn("w:numId"), str(num_id))
     ref = OxmlElement("w:abstractNumId"); ref.set(qn("w:val"), str(abstract_id)); num.append(ref); numbering.append(num)
     return num_id
@@ -375,16 +394,17 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
             paragraph.paragraph_format.keep_with_next = True
         elif kind in {"paragraph", "list"}:
             if kind == "list":
-                geometry = profile.get("listStyle", {}).get(block["kind"], {"markerPt": 18, "textPt": 42})
-                marker, text = round(geometry["markerPt"] * 20), round(geometry["textPt"] * 20)
-                list_num = _new_list_numbering(document, block["kind"], block.get("start", 1), marker, text)
+                list_num = _new_list_numbering(document, block["items"], block["kind"], block.get("start", 1), profile)
                 items = block["items"]
             else:
                 items = [block]
             for item in items:
                 paragraph = document.add_paragraph()
                 if kind == "list":
-                    _bind_heading_numbering(paragraph, 1, list_num)
+                    level = item.get("level", 0)
+                    geometry = profile.get("listStyle", {}).get(item.get("kind", block["kind"]), {"markerPt": 18, "textPt": 42})
+                    marker, text = round(geometry["markerPt"] * 20), round(geometry["textPt"] * 20) + level * 360
+                    _bind_heading_numbering(paragraph, level + 1, list_num)
                     paragraph.paragraph_format.left_indent = Pt(text / 20)
                     paragraph.paragraph_format.first_line_indent = Pt((marker - text) / 20)
                     paragraph.paragraph_format.tab_stops.add_tab_stop(Pt(text / 20), WD_TAB_ALIGNMENT.LIST)

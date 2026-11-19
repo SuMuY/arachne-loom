@@ -88,12 +88,74 @@ def test_invalid_list_items_rejected(items):
     assert any('list' in error for error in validate(model, profile, task))
 
 
-def test_nested_list_is_rejected(tmp_path):
-    from arachne_loom.parser import ParseError
+def test_parse_nested_list_levels(tmp_path):
     source = tmp_path / 'nested.md'
-    source.write_text('- Parent\n  - Child\n', encoding='utf-8')
-    with pytest.raises(ParseError, match='nested lists'):
+    source.write_text('1. Parent\n  1. Child one\n  2. Child two\n2. Next parent\n', encoding='utf-8')
+    block = parse_markdown(source)['blocks'][0]
+    assert [(item['level'], item['start'], item['kind']) for item in block['items']] == [
+        (0, 1, 'ordered'), (1, 1, 'ordered'), (1, 1, 'ordered'), (0, 1, 'ordered')]
+
+
+def test_parse_rejects_mixed_list_kinds_at_same_level(tmp_path):
+    from arachne_loom.parser import ParseError
+    source = tmp_path / 'mixed-siblings.md'
+    source.write_text('- Bullet\n1. Number\n', encoding='utf-8')
+    with pytest.raises(ParseError, match='list kind cannot change'):
         parse_markdown(source)
+
+
+def test_nested_numbering_uses_native_levels_and_restarts_children(tmp_path):
+    model, profile, task = fixture()
+    model['blocks'] = [{'type': 'list', 'kind': 'ordered', 'start': 1, 'items': [
+        {'level': 0, 'start': 1, 'kind': 'ordered', 'inlines': [{'type': 'text', 'text': 'Parent one'}]},
+        {'level': 1, 'start': 1, 'kind': 'ordered', 'inlines': [{'type': 'text', 'text': 'Child one'}]},
+        {'level': 1, 'start': 2, 'kind': 'ordered', 'inlines': [{'type': 'text', 'text': 'Child two'}]},
+        {'level': 0, 'start': 2, 'kind': 'ordered', 'inlines': [{'type': 'text', 'text': 'Parent two'}]},
+        {'level': 1, 'start': 1, 'kind': 'ordered', 'inlines': [{'type': 'text', 'text': 'Child restarted'}]},
+    ]}]
+    profile['listStyle'] = {'ordered': {'markerPt': 18, 'textPt': 42},
+                            'unordered': {'markerPt': 18, 'textPt': 42}}
+    output = compile_document(model, profile, task, tmp_path / 'nested-build')
+    doc = Document(output / 'document.docx')
+    assert [p.text for p in doc.paragraphs] == ['Parent one', 'Child one', 'Child two', 'Parent two', 'Child restarted']
+    levels = [int(p._p.xpath('./w:pPr/w:numPr/w:ilvl')[0].get(qn('w:val'))) for p in doc.paragraphs]
+    assert levels == [0, 1, 1, 0, 1]
+    num_ids = [p._p.xpath('./w:pPr/w:numPr/w:numId')[0].get(qn('w:val')) for p in doc.paragraphs]
+    assert len(set(num_ids)) == 1
+    numbering = doc.part.numbering_part.element
+    abstract_id = numbering.xpath(f'./w:num[@w:numId="{num_ids[0]}"]/w:abstractNumId')[0].get(qn('w:val'))
+    abstract = numbering.xpath(f'./w:abstractNum[@w:abstractNumId="{abstract_id}"]')[0]
+    assert abstract.find(qn('w:multiLevelType')).get(qn('w:val')) == 'multilevel'
+    assert [lvl.find(qn('w:numFmt')).get(qn('w:val')) for lvl in abstract.findall(qn('w:lvl'))] == ['decimal', 'decimal']
+    assert [lvl.find(qn('w:lvlText')).get(qn('w:val')) for lvl in abstract.findall(qn('w:lvl'))] == ['%1.', '%1.%2.']
+
+
+def test_nested_levels_can_mix_ordered_and_unordered(tmp_path):
+    model, profile, task = fixture()
+    model['blocks'] = [{'type': 'list', 'kind': 'ordered', 'items': [
+        {'level': 0, 'kind': 'ordered', 'inlines': [{'type': 'text', 'text': 'Parent'}]},
+        {'level': 1, 'kind': 'unordered', 'inlines': [{'type': 'text', 'text': 'Child'}]},
+    ]}]
+    output = compile_document(model, profile, task, tmp_path / 'mixed-build')
+    doc = Document(output / 'document.docx')
+    num_id = doc.paragraphs[0]._p.xpath('./w:pPr/w:numPr/w:numId')[0].get(qn('w:val'))
+    abstract_id = doc.part.numbering_part.element.xpath(f'./w:num[@w:numId="{num_id}"]/w:abstractNumId')[0].get(qn('w:val'))
+    levels = doc.part.numbering_part.element.xpath(f'./w:abstractNum[@w:abstractNumId="{abstract_id}"]/w:lvl')
+    assert [lvl.find(qn('w:numFmt')).get(qn('w:val')) for lvl in levels] == ['decimal', 'bullet']
+
+
+@pytest.mark.parametrize('items', [
+    [{'level': 0, 'inlines': [{'type': 'text', 'text': 'Parent'}]},
+     {'level': 2, 'inlines': [{'type': 'text', 'text': 'Skipped level'}]}],
+    [{'level': 9, 'inlines': [{'type': 'text', 'text': 'Too deep'}]}],
+    [{'level': 1, 'inlines': [{'type': 'text', 'text': 'Missing parent'}]}],
+    [{'level': 0, 'kind': 'ordered', 'inlines': [{'type': 'text', 'text': 'Parent'}]},
+     {'level': 0, 'kind': 'unordered', 'inlines': [{'type': 'text', 'text': 'Different kind'}]}],
+])
+def test_invalid_nested_list_levels_rejected(items):
+    model, profile, task = fixture()
+    model['blocks'] = [{'type': 'list', 'kind': 'ordered', 'items': items}]
+    assert any('list level' in error or 'list kind' in error for error in validate(model, profile, task))
 
 
 def test_numbering_definitions_precede_instances(tmp_path):

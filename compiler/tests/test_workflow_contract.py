@@ -10,7 +10,7 @@ def test_workflow_routes_existing_docx_and_requires_native_numbering():
     assert "existing DOCX" in workflow
     assert "Always write to a different output path" in workflow
     assert "does not convert manual typed numbering" in workflow
-    assert "Nested lists are unsupported" in workflow
+    assert "up to nine nested list levels" in workflow
     assert "native Word numbering" in workflow
     assert "do not substitute an ad hoc file-specific patch" in workflow
 

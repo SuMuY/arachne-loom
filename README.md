@@ -209,7 +209,7 @@ The output directory also holds `expected-manifest.json`, `actual-manifest.json`
 | Woven natively | Deferred |
 |---|---|
 | Headings 1–9 + multilevel numbering | Merged table cells |
-| Single-level ordered/unordered lists | Nested lists |
+| Nested ordered/unordered lists (up to 9 levels) | Automatic recognition of typed list markers in arbitrary DOCX |
 | Rectangular tables + captions | Literature-management fields |
 | Figures + captions | Comments / tracked revisions |
 | Body cross-references (`REF … \h`) | Section-specific headers |
@@ -268,11 +268,13 @@ loom compile /tmp/indented-model.json examples/quickstart/indented-profile.json 
 See [the heading indentation guide](docs/heading-indentation.md) for geometry,
 Word verification, and scope.
 
-## Uniform ordered and unordered lists (v0.0.4)
+## Uniform ordered and unordered lists
 
-Native single-level Word lists use consistent marker positions, text tab stops,
-and hanging indents throughout the document. Set `listStyle.ordered` and
-`listStyle.unordered` with `markerPt`/`textPt` to customize them.
+Native multilevel Word lists use consistent marker positions, text tab stops,
+and hanging indents throughout the document. Ordered and unordered levels may
+be combined up to nine levels. Set `listStyle.ordered` and
+`listStyle.unordered` with `markerPt`/`textPt` to customize them. Existing DOCX
+normalization adjusts recognized native lists; it does not infer typed markers.
 See [list formatting](docs/list-formatting.md) for input syntax and examples.
 Desktop Word visual and save/reopen checks and user acceptance were completed
 on 2026-11-18. See the acceptance records in the heading indentation guide.

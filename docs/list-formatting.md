@@ -23,7 +23,7 @@
 
 Markdown 支持 `- `、`+ `、`* `、`• ` 无序列表，以及 `1. `、`1) ` 有序列表。同类型连续非空行形成一个列表；空行结束当前列表，下一个列表重新开始。圆点后至少有一个空白才识别为列表。已粘连的 `•文字` 应由语义编写入口确认后整理成 `- 文字`，不能自动改写正文中的普通圆点。
 
-目前支持单层列表；检测到缩进的列表项会报错，避免把嵌套关系抹平。列表内的交叉引用与正文共用 REF 实现。
+支持最多 9 层的嵌套列表。有序和无序层级可组合；同一层级内保持相同列表类型。Markdown 每增加两个空格表示进入下一层；空行结束当前列表。列表内的交叉引用与正文共用 REF 实现。
 
 Canonical Model 示例：
 
@@ -31,11 +31,14 @@ Canonical Model 示例：
 {
   "type": "list", "kind": "ordered", "start": 9,
   "items": [
-    {"inlines": [{"type": "text", "text": "第一个列表项"}]},
-    {"inlines": [{"type": "text", "text": "第二个列表项"}]}
+    {"level": 0, "kind": "ordered", "start": 9, "inlines": [{"type": "text", "text": "第一个列表项"}]},
+    {"level": 1, "kind": "unordered", "inlines": [{"type": "text", "text": "嵌套子项"}]},
+    {"level": 0, "kind": "ordered", "inlines": [{"type": "text", "text": "第二个列表项"}]}
   ]
 }
 ```
+
+每个列表项的 `level` 从 0 开始；`kind` 可覆盖列表块默认类型，`start` 仅定义该层首次出现时的起始编号。每个连续列表块使用一个 Word 多级编号定义，层级变化由原生 `ilvl` 表示。
 
 ## 验证状态
 
@@ -48,3 +51,9 @@ Canonical Model 示例：
 ## 最终验收（2026-11-18）
 
 Word 实际画面与保存重开检查已完成，见 `heading-indentation.md` 的后续核验记录。用户明确表示“我验收过了，你更新发布”。此前待验收记录保留作为历史；本次以 v0.0.4 发布验收通过的标题和列表实现。
+
+## 嵌套列表扩展（2026-11-19）
+
+Canonical Model 增加逐项 `level`、可选 `kind` 和层级起始值；Markdown 两空格缩进解析为最多九层。生成器对每个列表块输出一个原生 Word 多级编号定义。允许不同层级组合有序/无序，同一层级切换类型会报错，避免生成错误编号。
+
+49 项自动测试通过。`examples/quickstart/nested-lists.md` 完成 parse、validate、compile、inspect；渲染检查确认 `1 / 1.1 / 1.2 / 2 / 2.1`、子级重启、混合列表标记及缩进正确。此扩展尚未完成桌面 Microsoft Word 保存、关闭、重开验收，因此保持未发布。
