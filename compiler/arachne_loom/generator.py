@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from docx import Document
+from docx.enum.section import WD_ORIENT
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
@@ -20,7 +21,7 @@ from docx.shared import Cm, Pt, RGBColor
 
 from . import __version__
 from .fields import append_caption, append_cross_reference, append_toc_field
-from .validator import validate_or_raise
+from .validator import native_heading_paths, validate_or_raise
 
 
 def _hash(path: Path) -> str:
@@ -181,6 +182,7 @@ def _ensure_hyperlink_style(document: Document, profile: dict[str, Any]) -> None
         style = _style_by_id(document, style_id)
     else:
         style = document.styles.add_style(style_id, WD_STYLE_TYPE.CHARACTER)
+        style._element.set(qn("w:styleId"), style_id)
     style.name = profile.get("references", {}).get("characterStyleName", "Hyperlink")
     style.font.color.rgb = RGBColor.from_string(profile.get("references", {}).get("color", "#0000FF").lstrip("#"))
     style.font.underline = profile.get("references", {}).get("underline", True)
@@ -270,6 +272,10 @@ def _apply_profile(document: Document, profile: dict[str, Any]) -> None:
         section.page_width, section.page_height = Cm(21), Cm(29.7)
     else:
         section.page_width, section.page_height = Cm(21.59), Cm(27.94)
+    landscape = page.get("orientation", "portrait") == "landscape"
+    section.orientation = WD_ORIENT.LANDSCAPE if landscape else WD_ORIENT.PORTRAIT
+    if landscape:
+        section.page_width, section.page_height = section.page_height, section.page_width
     if "Caption" not in [style.name for style in document.styles]:
         document.styles.add_style("Caption", WD_STYLE_TYPE.PARAGRAPH)
     _neutralize_front_matter_style(document)
@@ -306,6 +312,7 @@ def _label(profile: dict[str, Any], kind: str, language: str) -> str:
 
 def _caption_results(model: dict[str, Any], profile: dict[str, Any]) -> dict[str, tuple[str, int, str]]:
     """Compute the initial results of the native STYLEREF and SEQ fields."""
+    heading_paths = iter(native_heading_paths(model["blocks"]))
     headings: dict[int, str] = {}
     sequences = {"table": 0, "figure": 0}
     results = {}
@@ -313,7 +320,8 @@ def _caption_results(model: dict[str, Any], profile: dict[str, Any]) -> dict[str
         kind = block["type"]
         if kind == "heading":
             level = block["level"]
-            headings[level] = ".".join(block.get("numberPath", []))
+            headings = {depth: number for depth, number in headings.items() if depth < level}
+            headings[level] = ".".join(next(heading_paths)[1])
             for caption_kind in sequences:
                 if level == profile["caption"][caption_kind]["sequenceResetLevel"]:
                     sequences[caption_kind] = 0
@@ -336,7 +344,7 @@ def _caption(document: Document, profile: dict[str, Any], language: str, kind: s
     chapter_style = _actual_style_name(document, chapter_role_config["styleId"])
     paragraph = document.add_paragraph(style=_style_by_id(document, profile["styles"]["roles"][conf["captionStyleRole"]]["styleId"]))
     caption_style_config = profile.get("captionStyle", {})
-    paragraph.alignment = 1 if caption_style_config.get("alignment", "center") == "center" else None
+    _apply_body_paragraph_format(paragraph, {"alignment": caption_style_config.get("alignment", "center")})
     paragraph.paragraph_format.space_before = Pt(caption_style_config.get("spaceBeforePt", 0))
     paragraph.paragraph_format.space_after = Pt(caption_style_config.get("spaceAfterPt", 6))
     paragraph.paragraph_format.line_spacing = caption_style_config.get("lineSpacing", 1)
@@ -373,9 +381,9 @@ def expected_manifest(model: dict[str, Any], profile: dict[str, Any], task: dict
     if toc.get("bodyEnabled"):
         toc_fields.append({"kind": "toc", "instruction": f'TOC \\o "1-{toc_level}" \\h'})
     if toc.get("tableListEnabled"):
-        toc_fields.append({"kind": "tables", "instruction": 'TOC \\c "Table" \\h'})
+        toc_fields.append({"kind": "tables", "instruction": f'TOC \\c "{profile["caption"]["table"]["sequenceIdentifier"]}" \\h'})
     if toc.get("figureListEnabled"):
-        toc_fields.append({"kind": "figures", "instruction": 'TOC \\c "Figure" \\h'})
+        toc_fields.append({"kind": "figures", "instruction": f'TOC \\c "{profile["caption"]["figure"]["sequenceIdentifier"]}" \\h'})
     return {"manifestVersion": "0.0.1", "createdAt": datetime.now(timezone.utc).isoformat(), "compilerVersion": __version__,
             "hashes": hashes, "objects": objects, "captions": captions, "crossReferences": references,
             "tables": tables, "images": images, "tocFields": toc_fields,
@@ -400,8 +408,8 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
     toc_level = task.get("tocMaxLevel", toc.get("bodyMaxLevel", 3))
     toc_instructions = {
         "toc": f'TOC \\o "1-{toc_level}" \\h',
-        "tables": 'TOC \\c "Table" \\h',
-        "figures": 'TOC \\c "Figure" \\h',
+        "tables": f'TOC \\c "{profile["caption"]["table"]["sequenceIdentifier"]}" \\h',
+        "figures": f'TOC \\c "{profile["caption"]["figure"]["sequenceIdentifier"]}" \\h',
     }
     enabled = {"toc": toc.get("bodyEnabled"), "tables": toc.get("tableListEnabled"), "figures": toc.get("figureListEnabled")}
     for part in toc.get("order", ["toc", "tables", "figures"]):
@@ -444,33 +452,69 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
                         target = inline["targetId"]
                         references = profile.get("references", {})
                         append_cross_reference(paragraph, _stable_bookmark(target), caption_results[target][2],
-                                               references.get("color", "#0000FF"), references.get("underline", True))
+                                               references.get("color", "#0000FF"), references.get("underline", True),
+                                               references.get("characterStyleId", "Hyperlink"))
                     else:
                         raise ValueError("literature citations are not implemented")
         elif kind == "table":
             chapter, sequence, _ = caption_results[block["id"]]
-            _caption(document, profile, language, "table", block, bookmark_id, chapter, sequence)
-            bookmark_id += 1
+            above = profile["caption"]["table"].get("position", "above") == "above"
+            if above:
+                _caption(document, profile, language, "table", block, bookmark_id, chapter, sequence)
             rows = block["rows"]
             table = document.add_table(rows=len(rows), cols=len(rows[0]))
-            table.style = "Table Grid"
+            config = profile.get("table", {})
+            if config.get("style") == "threeLine":
+                borders = OxmlElement("w:tblBorders")
+                for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+                    border = OxmlElement(f"w:{edge}")
+                    border.set(qn("w:val"), "single" if edge in ("top", "bottom") else "nil")
+                    if edge in ("top", "bottom"):
+                        border.set(qn("w:sz"), "8")
+                    borders.append(border)
+                table._tbl.tblPr.insert_element_before(borders, "w:tblLayout", "w:tblLook")
+                if len(rows) > 1:
+                    for cell in table.rows[0].cells:
+                        cell_borders = OxmlElement("w:tcBorders")
+                        bottom = OxmlElement("w:bottom")
+                        bottom.set(qn("w:val"), "single")
+                        bottom.set(qn("w:sz"), "4")
+                        cell_borders.append(bottom)
+                        cell._tc.get_or_add_tcPr().append(cell_borders)
+            else:
+                table.style = "Table Grid"
+            if config.get("layout") == "autoFitWindow":
+                width = table._tbl.tblPr.find(qn("w:tblW"))
+                width.set(qn("w:type"), "pct")
+                width.set(qn("w:w"), "5000")
+                table.autofit = True
             for row_index, row in enumerate(rows):
                 for col_index, value in enumerate(row):
                     cell = table.cell(row_index, col_index)
                     cell.text = value
                     if table_font_size is not None:
                         cell.paragraphs[0].runs[0].font.size = Pt(table_font_size)
-            _set_repeat_table_header(table.rows[0])
+            if profile.get("table", {}).get("repeatHeaderRow", True):
+                _set_repeat_table_header(table.rows[0])
+            if not above:
+                _caption(document, profile, language, "table", block, bookmark_id, chapter, sequence)
+            bookmark_id += 1
         elif kind == "figure":
             image_path = (Path(task.get("resourceRoot", model["resourceRoot"])) / block["src"]).resolve()
-            document.add_picture(str(image_path))
+            chapter, sequence, _ = caption_results[block["id"]]
+            above = profile["caption"]["figure"].get("position", "below") == "above"
+            if above:
+                _caption(document, profile, language, "figure", block, bookmark_id, chapter, sequence)
+            picture = document.add_picture(str(image_path))
+            if "alt" in block:
+                picture._inline.docPr.set("descr", block["alt"])
             image_paragraph = document.paragraphs[-1]
             image_paragraph.alignment = 1
             image_paragraph.paragraph_format.space_before = Pt(0)
             image_paragraph.paragraph_format.space_after = Pt(6)
             image_paragraph.paragraph_format.line_spacing = 1
-            chapter, sequence, _ = caption_results[block["id"]]
-            _caption(document, profile, language, "figure", block, bookmark_id, chapter, sequence)
+            if not above:
+                _caption(document, profile, language, "figure", block, bookmark_id, chapter, sequence)
             bookmark_id += 1
         elif kind == "references":
             document.add_paragraph("References", style="Heading 1")
@@ -518,6 +562,35 @@ def compile_document(model: dict[str, Any], profile: dict[str, Any], task: dict[
         actual = inspect_to_file(temporary / "document.docx", temporary / "actual-manifest.json", hashes)
         if actual.get("structuralIssues"):
             raise ValueError(f"generated DOCX has structural field/bookmark issues: {actual['structuralIssues']}")
+        caches = {item["bookmark"]: item["cachedDisplay"] for item in manifest["captions"]}
+        expected_refs = [[f"REF {_stable_bookmark(item['targetId'])} \\h", caches[_stable_bookmark(item["targetId"])]]
+                         for item in manifest["crossReferences"]]
+        expected_tables = [b["rows"] for b in model["blocks"] if b["type"] == "table"]
+        expected_paragraphs = []
+        for block in model["blocks"]:
+            kind = block["type"]
+            if kind == "heading":
+                expected_paragraphs.append(block["content"])
+            elif kind in ("paragraph", "list"):
+                for item in (block["items"] if kind == "list" else [block]):
+                    value = "".join(inline["text"] if inline["type"] == "text" else caches[_stable_bookmark(inline["targetId"])]
+                                    for inline in item["inlines"])
+                    if value:
+                        expected_paragraphs.append(value)
+        observed = iter(actual["paragraphText"])
+        checks = {
+            "captions and bookmarks": actual["captionCache"] == caches,
+            "references and targets": actual["referenceCache"] == expected_refs,
+            "table data": actual["tableData"] == expected_tables,
+            "directory sequence": sorted(actual["tocFields"]) == sorted(item["instruction"] for item in manifest["tocFields"]),
+            "field count": actual["fieldCount"] == manifest["expectedFieldCount"],
+            "body and heading text": all(any(text == expected for text in observed) for expected in expected_paragraphs),
+        }
+        differences = [name for name, matches in checks.items() if not matches]
+        if differences:
+            raise ValueError(f"generated DOCX differs from expected output: {', '.join(differences)}")
+        report["staticChecks"].extend(checks)
+        (temporary / "acceptance-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         if destination.exists():
             backup = destination.with_name(destination.name + ".previous")
             if backup.exists(): shutil.rmtree(backup)

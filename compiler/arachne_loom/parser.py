@@ -80,6 +80,7 @@ def parse_markdown(path: str | Path) -> dict[str, Any]:
             block = {"type": "list", "kind": "ordered" if marker[0].isdigit() else "unordered",
                      "start": int(marker[:-1]) if marker[0].isdigit() else 1, "items": []}
             first_at_level: dict[int, int] = {}
+            current_at_level: dict[int, int] = {}
             kind_at_level: dict[int, str] = {}
             previous_level = 0
             while i < len(lines):
@@ -101,6 +102,12 @@ def parse_markdown(path: str | Path) -> dict[str, Any]:
                 kind_at_level.setdefault(level, item_kind)
                 ordered_start = int(item_marker[:-1]) if item_kind == "ordered" else 1
                 first_at_level.setdefault(level, ordered_start)
+                current_at_level = {depth: value for depth, value in current_at_level.items() if depth <= level}
+                if item_kind == "ordered":
+                    expected = current_at_level.get(level, first_at_level[level] - 1) + 1
+                    if ordered_start != expected:
+                        raise ParseError(f"list numbering at line {i+1}: expected {expected}, got {ordered_start}")
+                    current_at_level[level] = expected
                 block["items"].append({"level": level, "kind": item_kind, "start": first_at_level[level],
                                        "inlines": _inlines(item_content)})
                 i += 1

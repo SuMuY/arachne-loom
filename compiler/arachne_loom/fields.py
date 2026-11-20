@@ -80,10 +80,11 @@ def append_caption(paragraph, bookmark_id: int, bookmark: str, label: str, chapt
     _run_text(container, f" {title}")
 
 
-def append_cross_reference(paragraph, bookmark: str, cached: str, color: str = "#0000FF", underline: bool = True) -> None:
+def append_cross_reference(paragraph, bookmark: str, cached: str, color: str = "#0000FF", underline: bool = True,
+                           character_style: str = "Hyperlink") -> None:
     # Keep the reference as one Word-native REF field, matching Word's own
     # cross-reference structure and avoiding nested-field style loss.
-    append_field(paragraph._p, f"REF {bookmark} \\h", cached, color, underline, "Hyperlink")
+    append_field(paragraph._p, f"REF {bookmark} \\h", cached, color, underline, character_style)
 
 
 def append_toc_field(paragraph, instruction: str) -> None:

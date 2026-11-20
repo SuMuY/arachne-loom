@@ -32,8 +32,7 @@
     "fontSizePt": 10.5,
     "layout": "autoFitWindow",
     "style": "threeLine",
-    "repeatHeaderRow": true,
-    "allowLocalOverrides": true
+    "repeatHeaderRow": true
   },
   "styles": {
     "roles": {
@@ -138,19 +137,6 @@
     "characterStyleName": "Hyperlink",
     "requireClickable": true
   },
-  "literature": {
-    "citationFormat": "[n]",
-    "citationPlacement": "superscript",
-    "citationColor": "#0000FF",
-    "citationUnderline": false,
-    "useNativeFields": true,
-    "referenceListOrder": "citationOrder",
-    "referenceStyle": "APA",
-    "maxAuthors": 3,
-    "fullTitle": true,
-    "italicizeJournal": true,
-    "italicizePages": true
-  },
   "toc": {
     "bodyEnabled": true,
     "bodyMaxLevel": 3,
@@ -161,12 +147,6 @@
       "tables",
       "figures"
     ]
-  },
-  "review": {
-    "mode": "cleanSubmission",
-    "revisionBasis": "finalDisplay",
-    "preserveComments": false,
-    "restoreCommentsOnlyWhenAnchored": true
   },
   "capabilities": {
     "literatureCitations": false

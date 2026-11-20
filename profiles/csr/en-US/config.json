@@ -5,8 +5,8 @@
   "languageFallback": "zh-CN",
   "page": {"size": "letter", "marginsCm": {"top": 2, "right": 2, "bottom": 2, "left": 2}, "orientation": "portrait"},
   "body": {"fontFamily": "Times New Roman", "fontSizePt": 12, "lineSpacing": 1.5, "alignment": "justified", "paragraphAfterPt": 6},
-  "headingStyle": {"italic": false},
-  "table": {"fontSizePt": 10.5, "layout": "autoFitWindow", "style": "threeLine", "repeatHeaderRow": true, "allowLocalOverrides": true},
+  "headingStyle": {"italic": false, "indentation": {"basePt": 0, "incrementPt": 18, "hangingPt": 54}},
+  "table": {"fontSizePt": 10.5, "layout": "autoFitWindow", "style": "threeLine", "repeatHeaderRow": true},
   "styles": {"roles": {
     "headingLevel1": {"styleId": "Heading1", "styleName": "heading 1", "outlineLevel": 0},
     "headingLevel2": {"styleId": "Heading2", "styleName": "heading 2", "outlineLevel": 1},
@@ -20,14 +20,12 @@
     "caption": {"styleId": "Caption", "styleName": "caption"}
   }},
   "caption": {
-    "labelMode": "auto", "useNativeFields": true, "numberingFormula": "chapter-sequence", "separator": "-", "crossReferenceDisplay": "labelAndNumber", "tablePosition": "above", "figurePosition": "below",
+    "labelMode": "auto", "useNativeFields": true, "numberingFormula": "chapter-sequence", "separator": "-",
     "table": {"sequenceIdentifier": "Table", "labels": {"zh-CN": "表", "en-US": "Table"}, "captionStyleRole": "caption", "position": "above", "chapterStyleRole": "headingLevel1", "sequenceResetLevel": 1, "separator": "-"},
     "figure": {"sequenceIdentifier": "Figure", "labels": {"zh-CN": "图", "en-US": "Figure"}, "captionStyleRole": "caption", "position": "below", "chapterStyleRole": "headingLevel1", "sequenceResetLevel": 1, "separator": "-"}
   },
   "captionStyle": {"fontSizePt": 12, "bold": true, "italic": false, "alignment": "center", "spaceBeforePt": 0, "spaceAfterPt": 6, "lineSpacing": 1},
-  "references": {"useNativeFields": true, "color": "#0000FF", "underline": true, "characterStyleId": "Hyperlink", "characterStyleName": "Hyperlink", "requireClickable": true},
-  "literature": {"citationFormat": "[n]", "citationPlacement": "superscript", "citationColor": "#0000FF", "citationUnderline": false, "useNativeFields": true, "referenceListOrder": "citationOrder", "referenceStyle": "APA", "maxAuthors": 3, "fullTitle": true, "italicizeJournal": true, "italicizePages": true},
+  "references": {"color": "#0000FF", "underline": true, "characterStyleId": "Hyperlink", "characterStyleName": "Hyperlink"},
   "toc": {"bodyEnabled": true, "bodyMaxLevel": 3, "tableListEnabled": true, "figureListEnabled": true, "order": ["toc", "tables", "figures"]},
-  "review": {"mode": "cleanSubmission", "revisionBasis": "finalDisplay", "preserveComments": false, "restoreCommentsOnlyWhenAnchored": true},
   "capabilities": {"literatureCitations": false}
 }

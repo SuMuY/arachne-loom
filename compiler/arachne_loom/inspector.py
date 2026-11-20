@@ -107,11 +107,39 @@ def inspect(docx_path: str | Path, hashes: dict[str, str] | None = None) -> dict
         columns = max((len(row.xpath("./w:tc", namespaces=NS)) for row in rows), default=0)
         tables.append({"order": index, "rows": len(rows), "columns": columns})
     images = [rel.get("Target") for rel in relationships if rel.get("Type", "").endswith("/image")]
+    paragraphs = document.xpath("./w:body/w:p", namespaces=NS)
+    caption_cache = {}
+    reference_cache = []
+    for paragraph in paragraphs:
+        active_bookmark = None
+        instruction = None
+        for element in paragraph.xpath("./w:bookmarkStart | ./w:bookmarkEnd | ./w:r/*", namespaces=NS):
+            tag = etree.QName(element).localname
+            if tag == "bookmarkStart":
+                active_bookmark = element.get(f"{{{W}}}name", "")
+                if active_bookmark.startswith("rdx_"):
+                    caption_cache[active_bookmark] = ""
+            elif tag == "bookmarkEnd":
+                active_bookmark = None
+            elif tag == "instrText":
+                instruction = (element.text or "").strip()
+            elif tag == "fldChar" and element.get(f"{{{W}}}fldCharType") == "end":
+                instruction = None
+            elif tag == "t":
+                if active_bookmark in caption_cache:
+                    caption_cache[active_bookmark] += element.text or ""
+                if instruction and instruction.startswith("REF "):
+                    reference_cache.append([instruction, element.text or ""])
+    table_data = [[[_text(cell) for cell in row.xpath("./w:tc", namespaces=NS)]
+                   for row in table.xpath("./w:tr", namespaces=NS)]
+                  for table in document.xpath("./w:body/w:tbl", namespaces=NS)]
     return {"manifestVersion": "0.0.1", "createdAt": datetime.now(timezone.utc).isoformat(), "hashes": hashes or {},
             "bookmarks": bookmarks, "fields": fields, "fieldCount": len(fields), "tocFields": toc_fields,
             "hyperlinkRefRuns": hyperlink_runs, "tables": tables,
             "images": images, "wordErrorCachePresent": "错误!" in _text(document),
-            "structuralIssues": structural_issues}
+            "structuralIssues": structural_issues, "captionCache": caption_cache,
+            "referenceCache": reference_cache, "tableData": table_data,
+            "paragraphText": [_text(p) for p in paragraphs if _text(p)]}
 
 
 def inspect_to_file(docx_path: str | Path, output_path: str | Path, hashes: dict[str, str] | None = None) -> dict[str, Any]:

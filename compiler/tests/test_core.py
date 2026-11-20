@@ -182,3 +182,26 @@ def test_csr_native_caption_results_restart_at_chapters(tmp_path):
     assert fields.count(r'SEQ Table \s 1 \* ARABIC') == 3
     assert fields.count(r'SEQ Figure \s 1 \* ARABIC') == 2
     assert sum(field.startswith('REF ') for field in fields) == 2
+
+
+def test_native_profile_overrides(tmp_path):
+    from docx.oxml.ns import qn
+    model = parse_markdown(PACKAGE / 'examples/quickstart/sample.md')
+    profile = json.loads(PROFILE.read_text())
+    profile['page']['orientation'] = 'landscape'
+    profile['table']['repeatHeaderRow'] = False
+    profile['caption']['table'].update(position='below', sequenceIdentifier='StudyTable')
+    profile['captionStyle']['alignment'] = 'right'
+    profile['references']['characterStyleId'] = 'StudyRef'
+    output = compile_document(model, profile, {'baseTemplate': str(BASE), 'emitLists': True}, tmp_path / 'out')
+    path = output / 'document.docx'
+    doc = Document(path)
+    assert doc.sections[0].page_width > doc.sections[0].page_height
+    table = doc.tables[0]
+    assert table._tbl.tblPr.find(qn('w:tblW')).get(qn('w:w')) == '5000'
+    borders = table._tbl.tblPr.find(qn('w:tblBorders'))
+    assert borders.find(qn('w:insideV')).get(qn('w:val')) == 'nil'
+    assert not table.rows[0]._tr.xpath('./w:trPr/w:tblHeader')
+    assert table._tbl.getnext().xpath('./w:pPr/w:jc/@w:val') == ['right']
+    assert doc.element.xpath('.//w:rStyle[@w:val="StudyRef"]')
+    assert 'TOC \\c "StudyTable" \\h' in inspect(path)['tocFields']

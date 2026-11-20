@@ -28,8 +28,45 @@ def _role(profile: dict[str, Any], role: str) -> dict[str, Any] | None:
     return profile.get("styles", {}).get("roles", {}).get(role)
 
 
+def native_heading_paths(blocks):
+    headings = [b for b in blocks if b.get("type") == "heading"]
+    first = headings[0].get("numberPath", []) if headings else []
+    starts = [str(int(n)) if isinstance(n, str) and re.fullmatch(r"[0-9]{1,10}", n) and 0 < int(n) <= 2147483647 else "1" for n in first]
+    active = []
+    for block in headings:
+        level = block.get("level")
+        if type(level) is not int or not 1 <= level <= 9:
+            continue
+        if len(active) >= level:
+            active = active[:level]
+            active[-1] = str(int(active[-1]) + 1)
+        else:
+            active.extend(starts[d] if d < len(starts) else "1" for d in range(len(active), level))
+        yield block, active.copy()
+
+
 def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]) -> list[str]:
     errors: list[str] = []
+    for source, options in (("profile", profile), ("task", task)):
+        for key in ("literature", "review"):
+            if key in options:
+                errors.append(f"{source} {key} is unsupported; remove the legacy option")
+    if "allowLocalOverrides" in profile.get("table", {}):
+        errors.append("profile table.allowLocalOverrides is unsupported; remove the legacy option")
+    if profile.get("capabilities", {}).get("literatureCitations"):
+        errors.append("literature citations are unsupported")
+    if profile.get("page", {}).get("orientation", "portrait") not in ("portrait", "landscape"):
+        errors.append("profile page.orientation must be portrait or landscape")
+    if profile.get("captionStyle", {}).get("alignment", "center") not in ("left", "center", "right", "justified"):
+        errors.append("profile captionStyle.alignment must be left, center, right, or justified")
+    for kind in ("table", "figure"):
+        position = profile.get("caption", {}).get(kind, {}).get("position", "above")
+        if position not in ("above", "below"):
+            errors.append(f"profile caption.{kind}.position must be above or below")
+    for name, depth in (("toc.bodyMaxLevel", profile.get("toc", {}).get("bodyMaxLevel", 3)),
+                        ("tocMaxLevel", task.get("tocMaxLevel", 3))):
+        if type(depth) is not int or not 1 <= depth <= 9:
+            errors.append(f"{name} must be an integer from 1 to 9")
     for section, fields in (("body", ("lineSpacing", "paragraphAfterPt")), ("table", ("fontSizePt",))):
         config = profile.get(section, {})
         if not isinstance(config, dict):
@@ -81,6 +118,10 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
     ids: set[str] = set()
     targets: set[str] = set()
     refs: list[str] = []
+    for block, path in native_heading_paths(model.get("blocks", [])):
+        explicit = block.get("numberPath", [])
+        if explicit and explicit != path:
+            errors.append(f"heading {block.get('id')}: expected native number {'.'.join(path)}, got {explicit}")
     previous_level = 0
     seen_heading_levels: set[int] = set()
     for position, block in enumerate(model.get("blocks", []), start=1):
@@ -93,6 +134,7 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
                 errors.append(f"block {position}: heading level jumps from {previous_level} to {level}")
             previous_level = level if isinstance(level, int) else previous_level
             if isinstance(level, int):
+                seen_heading_levels = {depth for depth in seen_heading_levels if depth < level}
                 seen_heading_levels.add(level)
             role = _role(profile, f"headingLevel{level}") if isinstance(level, int) else None
             if not role:
@@ -148,7 +190,7 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
             for inline in inlines:
                 if inline.get("type") == "crossReference":
                     refs.append(inline.get("targetId", ""))
-                if inline.get("type") == "literatureCitation" and not profile.get("capabilities", {}).get("literatureCitations", False):
+                if inline.get("type") == "literatureCitation":
                     errors.append(f"block {position}: literature citations are not supported by this profile")
         if kind == "table":
             rows = block.get("rows")

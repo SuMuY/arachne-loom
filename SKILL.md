@@ -21,10 +21,12 @@ All repository-relative paths below are relative to this Skill root. Follow `REA
 
 ## Native structure requirements
 
-- Use Word heading styles and native multilevel numbering. Configure heading indentation from the widest expected rendered label in the target font, with a compact hanging width that fits.
+- Use Word heading styles and native multilevel numbering. Use the selected profile’s fixed heading positions. The compiler writes the native tab stop and hanging indent. In Word, check the longest representative label and confirm it fits the configured space.
 - Structured Markdown supports up to nine nested list levels using two-space indentation per level. Canonical Model list items use `level` 0–8 and may specify per-level `kind` and initial `start`. Compile each list block as one native Word multilevel numbering definition. Validate emitted `ilvl`, numbering format, and restarts; never flatten nested levels or simulate numbering with typed markers and tabs.
 - Generated list markers must remain Word-native numbering. Do not insert marker characters as ordinary paragraph text.
 - Existing-DOCX normalization changes geometry only for recognized native headings/lists. It does not convert typed numbering, infer headings, import/rebuild the full document, or guarantee arbitrary Word features.
+
+- `emitLists` enables directory generation for the task. The profile selects the individual directories. Body paragraph spacing and alignment apply to ordinary paragraphs. Native REF fields display the target label and number. Initial color is configurable. Verify color and navigation again after updating fields in Word.
 
 ## Verification and handoff
 

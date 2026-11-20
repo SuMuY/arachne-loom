@@ -15,11 +15,12 @@ def test_workflow_routes_existing_docx_and_requires_native_numbering():
     assert "do not use an ad hoc file-specific patch" in workflow
 
 
-def test_heading_guidance_requires_compact_measured_number_width():
+def test_heading_guidance_uses_profile_and_checks_long_number():
     workflow = (ROOT / "SKILL.md").read_text()
     reference = (ROOT / "docs/heading-indentation.md").read_text()
 
-    assert "compact hanging width" in workflow
+    assert "fixed heading positions" in workflow
+    assert "longest representative label" in workflow
     assert "72 pt" in reference
     assert "smallest hanging area" in reference
     assert "number-to-text gap" in reference

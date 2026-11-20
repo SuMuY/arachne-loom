@@ -62,6 +62,7 @@ def test_invalid_indentation_rejected(bad):
 
 def test_omitted_indentation_keeps_template_geometry(tmp_path):
     model, profile, task = inputs()
+    profile["headingStyle"].pop("indentation", None)
     original = Document(task["baseTemplate"])
     output = compile_document(model, profile, task, tmp_path / "build")
     doc = Document(output / "document.docx")

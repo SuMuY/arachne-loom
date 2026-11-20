@@ -18,4 +18,4 @@ This profile defines one default CTD standard with explicit task-level overrides
 - The body TOC defaults to Heading 1-3. A task may explicitly raise this with `tocMaxLevel` (1-9); it must not be inferred from the source.
 - TOC, table-list, and figure-list headings are front matter: they do not consume body chapter numbers. Entries retain document occurrence order.
 
-The v0 engine supports Letter/A4 page configuration, Times New Roman body text, 1.5 line spacing, justified body paragraphs, 10.5 pt tables, and blue clickable references. Unsupported capabilities are rejected rather than silently downgraded.
+The v0 engine supports Letter/A4 page configuration, Times New Roman body text, 1.5 line spacing, justified body paragraphs, 10.5 pt tables, and native clickable REF fields with blue initial text. Color after Word field refresh requires desktop verification. Unsupported capabilities are rejected rather than silently downgraded.

@@ -5,3 +5,5 @@
 The legacy `profiles/ctd/config.json` is kept as the default Chinese alias for tools that expect the original v0 path. New tasks should select an explicit locale directory.
 
 Do not compile a Chinese model with the English profile or mix locale-specific bases. The validator rejects a profile/model language mismatch.
+
+Both language profiles set native heading geometry, three-line borders, 100% preferred table width, and repeatable table headers. Caption positions are configured separately under `caption.table.position` and `caption.figure.position`. Legacy table overrides, literature options, and review options are unsupported.
