@@ -151,3 +151,34 @@ def test_no_sensitive_data_in_repo():
         capture_output=True, text=True,
     )
     assert result.returncode == 0, f"leak guard failed:\n{result.stderr}"
+
+
+def test_csr_native_caption_results_restart_at_chapters(tmp_path):
+    resources = PACKAGE / 'examples/quickstart'
+    profile = json.loads((PACKAGE / 'profiles/csr/zh-CN/config.json').read_text())
+    model = parse_markdown(resources / 'sample.md')
+    blocks = []
+    for chapter in (1, 2):
+        blocks.extend([
+            {'type': 'heading', 'id': f'h{chapter}', 'level': 1, 'numberPath': [str(chapter)], 'content': '章'},
+            {'type': 'heading', 'id': f's{chapter}', 'level': 2, 'numberPath': [str(chapter), '1'], 'content': '节'},
+            {'type': 'paragraph', 'inlines': [{'type': 'crossReference', 'targetId': f't{chapter}'}]},
+            {'type': 'table', 'id': f't{chapter}', 'title': '表格', 'headerRows': 1, 'rows': [['标题'], ['值']]},
+            {'type': 'figure', 'id': f'f{chapter}', 'title': '图片', 'src': 'images/figure.png'},
+        ])
+    blocks.append({'type': 'table', 'id': 't3', 'title': '续表', 'headerRows': 1, 'rows': [['标题']]})
+    model['blocks'] = blocks
+    output = compile_document(model, profile, {'baseTemplate': str(BASE), 'resourceRoot': str(resources)}, tmp_path / 'build')
+    document = Document(output / 'document.docx')
+    texts = [p.text for p in document.paragraphs]
+    for chapter in (1, 2):
+        assert f'表 {chapter}-1' in texts
+        assert f'表 {chapter}-1 表格' in texts
+        assert f'图 {chapter}-1 图片' in texts
+    assert '表 2-2 续表' in texts
+    manifest = json.loads((output / 'expected-manifest.json').read_text())
+    assert [item['cachedDisplay'] for item in manifest['captions']] == ['表 1-1', '图 1-1', '表 2-1', '图 2-1', '表 2-2']
+    fields = inspect(output / 'document.docx')['fields']
+    assert fields.count(r'SEQ Table \s 1 \* ARABIC') == 3
+    assert fields.count(r'SEQ Figure \s 1 \* ARABIC') == 2
+    assert sum(field.startswith('REF ') for field in fields) == 2

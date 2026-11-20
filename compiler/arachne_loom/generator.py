@@ -304,8 +304,32 @@ def _label(profile: dict[str, Any], kind: str, language: str) -> str:
     return labels.get(language) or labels.get(profile.get("languageFallback", "")) or ""
 
 
+def _caption_results(model: dict[str, Any], profile: dict[str, Any]) -> dict[str, tuple[str, int, str]]:
+    """Compute the initial results of the native STYLEREF and SEQ fields."""
+    headings: dict[int, str] = {}
+    sequences = {"table": 0, "figure": 0}
+    results = {}
+    for block in model["blocks"]:
+        kind = block["type"]
+        if kind == "heading":
+            level = block["level"]
+            headings[level] = ".".join(block.get("numberPath", []))
+            for caption_kind in sequences:
+                if level == profile["caption"][caption_kind]["sequenceResetLevel"]:
+                    sequences[caption_kind] = 0
+        elif kind in sequences:
+            conf = profile["caption"][kind]
+            chapter_level = profile["styles"]["roles"][conf["chapterStyleRole"]]["outlineLevel"] + 1
+            chapter = headings.get(chapter_level) or "0"
+            sequences[kind] += 1
+            sequence = sequences[kind]
+            label = _label(profile, kind, model["language"])
+            results[block["id"]] = chapter, sequence, f"{label} {chapter}{conf['separator']}{sequence}"
+    return results
+
+
 def _caption(document: Document, profile: dict[str, Any], language: str, kind: str, block: dict[str, Any],
-             bookmark_id: int, sequence: int) -> tuple[Any, dict[str, Any]]:
+             bookmark_id: int, chapter: str, sequence: int) -> None:
     conf = profile["caption"][kind]
     style_role = conf["chapterStyleRole"]
     chapter_role_config = profile["styles"]["roles"][style_role]
@@ -321,31 +345,21 @@ def _caption(document: Document, profile: dict[str, Any], language: str, kind: s
     caption_style.font.bold = caption_style_config.get("bold", True)
     caption_style.font.italic = caption_style_config.get("italic", False)
     bookmark = _stable_bookmark(block["id"])
-    chapter = ".".join(block.get("_currentChapter", [])) or "0"
     append_caption(paragraph, bookmark_id, bookmark, _label(profile, kind, language), chapter_style,
                    conf["sequenceIdentifier"], conf["sequenceResetLevel"], conf["separator"], chapter,
                    str(sequence), block["title"])
-    return paragraph, {"objectId": block["id"], "bookmark": bookmark, "kind": kind,
-                       "cachedDisplay": f"{_label(profile, kind, language)} {chapter}{conf['separator']}{sequence}"}
 
 
 def expected_manifest(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any], hashes: dict[str, str]) -> dict[str, Any]:
     objects, captions, references, tables, images = [], [], [], [], []
-    chapter: list[str] = []
-    seq = {"table": 0, "figure": 0}
+    results = _caption_results(model, profile)
     for position, block in enumerate(model["blocks"]):
         kind = block["type"]
-        if kind == "heading":
-            chapter = block.get("numberPath", chapter)
         if kind in {"heading", "table", "figure"}:
             objects.append({"id": block["id"], "type": kind, "order": position})
-        if kind in seq:
-            seq[kind] += 1
-            conf = profile["caption"][kind]
-            label = _label(profile, kind, model["language"])
-            number = ".".join(chapter) or "0"
+        if kind in {"table", "figure"}:
             captions.append({"objectId": block["id"], "bookmark": _stable_bookmark(block["id"]), "kind": kind,
-                             "cachedDisplay": f"{label} {number}{conf['separator']}{seq[kind]}"})
+                             "cachedDisplay": results[block["id"]][2]})
             if kind == "table": tables.append({"id": block["id"], "rows": len(block["rows"]), "columns": len(block["rows"][0])})
             else: images.append({"id": block["id"], "src": block["src"]})
         if kind in {"paragraph", "list"}:
@@ -368,7 +382,7 @@ def expected_manifest(model: dict[str, Any], profile: dict[str, Any], task: dict
             "expectedFieldCount": len(captions) * 2 + len(references) + len(toc_fields)}
 
 
-def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any], base: Path, output: Path) -> dict[str, Any]:
+def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any], base: Path, output: Path) -> None:
     document = Document(base)
     _apply_profile(document, profile)
     body_format = profile.get("body", {})
@@ -376,12 +390,8 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
     first_path = next((block.get("numberPath", []) for block in model["blocks"] if block.get("type") == "heading"), [])
     heading_num_id = _ensure_heading_numbering(document, first_path, profile)
     language = model["language"]
-    current_chapter: list[str] = []
-    # Precompute stable caption targets so a reference may legally precede its object.
-    caption_map: dict[str, dict[str, Any]] = {
-        item["objectId"]: item for item in expected_manifest(model, profile, task, {}).get("captions", [])
-    }
-    table_seq = figure_seq = 0
+    # Compute results before rendering so forward references use the same value.
+    caption_results = _caption_results(model, profile)
     bookmark_id = 1
     toc = profile.get("toc", {}) if task.get("emitLists", False) else {}
     toc_titles = {"toc": "目录" if language == "zh-CN" else "Contents",
@@ -404,7 +414,6 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
     for block in model["blocks"]:
         kind = block["type"]
         if kind == "heading":
-            current_chapter = block.get("numberPath", current_chapter)
             role = profile["styles"]["roles"][f"headingLevel{block['level']}"]
             paragraph = document.add_paragraph(block["content"], style=_style_by_id(document, role["styleId"]))
             _bind_heading_numbering(paragraph, block["level"], heading_num_id)
@@ -432,18 +441,16 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
                     if inline["type"] == "text":
                         paragraph.add_run(inline["text"])
                     elif inline["type"] == "crossReference":
-                        target = caption_map[inline["targetId"]]
+                        target = inline["targetId"]
                         references = profile.get("references", {})
-                        append_cross_reference(paragraph, target["bookmark"], target["cachedDisplay"],
+                        append_cross_reference(paragraph, _stable_bookmark(target), caption_results[target][2],
                                                references.get("color", "#0000FF"), references.get("underline", True))
                     else:
                         raise ValueError("literature citations are not implemented")
         elif kind == "table":
-            table_seq += 1
-            copy = dict(block, _currentChapter=current_chapter)
-            _, entry = _caption(document, profile, language, "table", copy, bookmark_id, table_seq)
+            chapter, sequence, _ = caption_results[block["id"]]
+            _caption(document, profile, language, "table", block, bookmark_id, chapter, sequence)
             bookmark_id += 1
-            caption_map[block["id"]] = entry
             rows = block["rows"]
             table = document.add_table(rows=len(rows), cols=len(rows[0]))
             table.style = "Table Grid"
@@ -455,7 +462,6 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
                         cell.paragraphs[0].runs[0].font.size = Pt(table_font_size)
             _set_repeat_table_header(table.rows[0])
         elif kind == "figure":
-            figure_seq += 1
             image_path = (Path(task.get("resourceRoot", model["resourceRoot"])) / block["src"]).resolve()
             document.add_picture(str(image_path))
             image_paragraph = document.paragraphs[-1]
@@ -463,10 +469,9 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
             image_paragraph.paragraph_format.space_before = Pt(0)
             image_paragraph.paragraph_format.space_after = Pt(6)
             image_paragraph.paragraph_format.line_spacing = 1
-            copy = dict(block, _currentChapter=current_chapter)
-            _, entry = _caption(document, profile, language, "figure", copy, bookmark_id, figure_seq)
+            chapter, sequence, _ = caption_results[block["id"]]
+            _caption(document, profile, language, "figure", block, bookmark_id, chapter, sequence)
             bookmark_id += 1
-            caption_map[block["id"]] = entry
         elif kind == "references":
             document.add_paragraph("References", style="Heading 1")
             for item in block["items"]:
@@ -477,7 +482,6 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
     document.core_properties.title = str(model.get("metadata", {}).get("title", ""))
     document.core_properties.comments = "Generated by arachne-loom; update fields in desktop Word before release."
     document.save(output)
-    return caption_map
 
 
 def compile_document(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any], out_dir: str | Path,
