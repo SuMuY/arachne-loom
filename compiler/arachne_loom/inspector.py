@@ -15,7 +15,10 @@ NS = {"w": W}
 
 
 def _text(element) -> str:
-    return "".join(element.xpath(".//w:t/text()", namespaces=NS))
+    return "".join(
+        (node.text or "") if node.tag == f"{{{W}}}t" else "\t" if node.tag == f"{{{W}}}tab" else "\n"
+        for node in element.xpath(".//w:r/w:t | .//w:r/w:tab | .//w:r/w:br | .//w:r/w:cr", namespaces=NS)
+    )
 
 
 def inspect(docx_path: str | Path, hashes: dict[str, str] | None = None) -> dict[str, Any]:
