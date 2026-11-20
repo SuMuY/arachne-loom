@@ -188,7 +188,7 @@ The loom accepts exactly one semantic contract — the **Canonical Model**. CTD-
                                 one true input contract
 ```
 
-The model and Word field mechanics are reusable across domains. A **profile** selects the implemented presentation policies; the supplied profiles target CTD. Other document types can reuse supported structures, but requirements outside the current numbering and layout capabilities need implementation and separate acceptance. See the scope section above for concrete limits.
+The model and Word field mechanics are reusable across domains. A **profile** selects the implemented presentation policies; the supplied profiles cover CTD and CSR. The quickstart below uses the CTD example. CSR inputs use a level-1 heading before chapter-based captions. Other document types can reuse supported structures, but requirements outside the current numbering and layout capabilities need implementation and separate acceptance. See the scope section above for concrete limits.
 
 ---
 
