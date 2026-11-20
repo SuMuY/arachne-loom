@@ -47,3 +47,7 @@ Tested implementation `8b88179`. The 62 compiler regression tests passed.
 - Still pending in desktop Word: nested list insertion/restarts/wrapping and save/reopen, and CSR figure numbering across chapters. The inspected CSR source and its available Word variants contained no embedded images or paragraph numbering below list level 0.
 
 - Compact heading follow-up: recompiled the same CSR headings and visually checked levels 1–4 in Word. Their reserved widths are now 24, 32, 42, and 54 pt. The first three levels have less space after their numbers, and same-level alignment and progressive indentation were visible. All 64 automated tests passed.
+
+## Native nested-list verification (2026-11-20)
+
+Used only the inclusion/exclusion criteria text from the CSR acceptance copy to construct a new list-focused DOCX; the source document was not modified. Word for Mac 16.115.1 displayed native ordered numbering 1–24, including 9-to-10 and 19-to-20 transitions. The long items wrapped to the text column, aligned under their text rather than under the number. A subordinate 1–4 list was nested under item 2 and restarted at 1 after the parent sequence advanced to item 3. This verifies initial layout and restart behavior. Save-close-reopen for this exact list-focused file remains pending; the attempted reopen was interrupted by Word's open dialog, so no persistence result is claimed.
