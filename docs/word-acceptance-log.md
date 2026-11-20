@@ -35,3 +35,12 @@ The following results were subsequently confirmed in the target Word environment
 - `examples/quickstart/build-lists-probe/document.docx`: body TOC, table list, and figure list updated correctly; inserting a table and figure from body paragraphs and updating all fields passed.
 
 These probes are accepted for the recorded environment. The minimal `build/document.docx` remains the recommended stable v0 handoff because it has the smallest editable field surface.
+
+## CSR regression on Word for Mac 16.115.1 (2026-11-20)
+
+Tested implementation `8b88179`. The 62 compiler regression tests passed.
+
+- Existing DOCX normalization: after saving and reopening the CSR copy, 133 native headings were recognized. Text starts for levels 1–4 were 54, 72, 90, and 108 pt. Paragraph text was preserved.
+- CSR table captions and body references: after updating fields, saving, and reopening, the first table in each of two chapters displayed its chapter number and sequence 1. The chapter 2 reference stayed blue and underlined. Command-clicking it on page 9 jumped to the caption on page 2.
+- Table layout: in print layout, the 69-row, 11-column table fit across the printable text area with no vertical grid lines. On page 2, the repeated header appeared when enabled and was absent when disabled.
+- Still pending in desktop Word: generated heading spacing at multiple levels, nested list insertion/restarts/wrapping and save/reopen, and CSR figure numbering across chapters. The inspected CSR source and its available Word variants contained no embedded images or paragraph numbering below list level 0.
