@@ -52,3 +52,7 @@ Tested implementation `8b88179`. The 62 compiler regression tests passed.
 
 Used only the inclusion/exclusion criteria text from the CSR acceptance copy to construct a new list-focused DOCX; the source document was not modified. Word for Mac 16.115.1 displayed native ordered numbering 1–24, including 9-to-10 and 19-to-20 transitions. The long items wrapped to the text column, aligned under their text rather than under the number. A subordinate 1–4 list was nested under item 2 and restarted at 1 after the parent sequence advanced to item 3. This verifies initial layout and restart behavior. Save-close-reopen for this exact list-focused file remains pending; the attempted reopen was interrupted by Word's open dialog, so no persistence result is claimed.
 - Nested-list save/reopen follow-up: saved the focused CSR criteria document, closed it, and reopened it in Word 16.115.1. The first and last pages retained ordered numbering through 24, the nested sequence restarted at 1 beneath its parent, and long-item continuation remained aligned. PASS.
+
+## CSR figure numbering across chapters (2026-11-20)
+
+Word for Mac 16.115.1 displayed figure numbers 4-1, 5-1, and 5-2 after field update and again after saving, closing, and reopening. The focused document used real figures from an investigator brochure and the CSR profile. This verifies chapter reset for figure captions. The CSR source had no embedded figures, so this result applies to the separate focused document.
