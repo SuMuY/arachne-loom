@@ -14,14 +14,14 @@ from docx import Document
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
+from .validator import heading_geometry, valid_heading_indentation
+
 
 def _apply_heading_geometry(paragraph, profile: dict[str, Any], level: int) -> bool:
     config = profile.get("headingStyle", {}).get("indentation", {
         "basePt": 0, "incrementPt": 18, "hangingPt": 24,
     })
-    anchor = config["basePt"] + (level - 1) * config["incrementPt"]
-    left = round((anchor + config["hangingPt"]) * 20)
-    hanging = round(config["hangingPt"] * 20)
+    left, hanging = heading_geometry(config, level)
     ppr = paragraph._p.get_or_add_pPr()
     ind = ppr.find(qn("w:ind"))
     if ind is None:
@@ -134,12 +134,8 @@ def normalize_docx(source: str | Path, output: str | Path, profile: dict[str, An
     if not source_path.is_file():
         raise FileNotFoundError(source_path)
     indentation = profile.get("headingStyle", {}).get("indentation")
-    if indentation is not None:
-        if set(indentation) != {"basePt", "incrementPt", "hangingPt"} or any(
-            not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0
-            for value in indentation.values()
-        ):
-            raise ValueError("headingStyle.indentation must contain finite non-negative basePt, incrementPt, hangingPt")
+    if indentation is not None and not valid_heading_indentation(indentation):
+        raise ValueError("headingStyle.indentation requires non-negative basePt, incrementPt and hangingPt (one width or nine widths)")
     for kind, geometry in profile.get("listStyle", {}).items():
         if kind not in {"ordered", "unordered"} or set(geometry) != {"markerPt", "textPt"} or any(
             not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0

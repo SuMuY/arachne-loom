@@ -26,7 +26,7 @@ def inputs(locale="zh-CN"):
 
 
 @pytest.mark.parametrize("locale", ["zh-CN", "en-US"])
-@pytest.mark.parametrize("base,step,gap", [(0, 18, 36), (9, 12, 24), (0, 0, 0)])
+@pytest.mark.parametrize("base,step,gap", [(0, 18, 36), (9, 12, 24), (0, 0, 0), (0, 18, [24, 32, 42, 54, 64, 74, 84, 94, 104])])
 def test_heading_indentation(tmp_path, locale, base, step, gap):
     model, profile, task = inputs(locale)
     profile["headingStyle"]["indentation"] = {
@@ -38,14 +38,15 @@ def test_heading_indentation(tmp_path, locale, base, step, gap):
     abstract_id = numbering.xpath(f'./w:num[@w:numId="{num_id}"]/w:abstractNumId')[0].get(qn("w:val"))
     levels = numbering.xpath(f'./w:abstractNum[@w:abstractNumId="{abstract_id}"]/w:lvl')
     for level, item in enumerate(levels):
-        left = base + level * step + gap
+        width = gap[level] if isinstance(gap, list) else gap
+        left = base + level * step + width
         style = next(s for s in doc.styles if s.style_id == f"Heading{level + 1}").paragraph_format
         assert style.left_indent is not None, "heading indentation is missing"
         assert style.left_indent.pt == left
-        assert style.first_line_indent.pt == -gap
+        assert style.first_line_indent.pt == -width
         ind = item.find(qn("w:pPr")).find(qn("w:ind"))
         assert int(ind.get(qn("w:left"))) == round(left * 20)
-        assert int(ind.get(qn("w:hanging"))) == round(gap * 20)
+        assert int(ind.get(qn("w:hanging"))) == round(width * 20)
         tab = item.find(qn("w:pPr")).find(qn("w:tabs")).find(qn("w:tab"))
         assert int(tab.get(qn("w:pos"))) == round(left * 20)
     assert doc.paragraphs[1].style == doc.paragraphs[-1].style

@@ -20,6 +20,27 @@ ID = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
 SUPPORTED_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}
 
 
+def valid_heading_indentation(config: Any) -> bool:
+    def valid_pt(value):
+        return (not isinstance(value, bool) and isinstance(value, (int, float))
+                and math.isfinite(value) and value >= 0)
+
+    if not isinstance(config, dict) or set(config) != {"basePt", "incrementPt", "hangingPt"}:
+        return False
+    width = config["hangingPt"]
+    valid_width = (len(width) == 9 and all(map(valid_pt, width))
+                   if isinstance(width, list) else valid_pt(width))
+    return valid_width and valid_pt(config["basePt"]) and valid_pt(config["incrementPt"])
+
+
+def heading_geometry(config: dict[str, Any], level: int) -> tuple[int, int]:
+    width = config["hangingPt"]
+    if isinstance(width, list):
+        width = width[level - 1]
+    anchor = config["basePt"] + (level - 1) * config["incrementPt"]
+    return round((anchor + width) * 20), round(width * 20)
+
+
 def load_json(path: str | Path) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -85,13 +106,8 @@ def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any
     heading = profile.get("headingStyle", {})
     if "indentation" in heading:
         config = heading["indentation"]
-        keys = {"basePt", "incrementPt", "hangingPt"}
-        if not isinstance(config, dict) or set(config) != keys:
-            errors.append("headingStyle.indentation requires exactly basePt, incrementPt, hangingPt")
-        else:
-            for key, value in config.items():
-                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
-                    errors.append(f"headingStyle.indentation.{key} must be a finite non-negative number")
+        if not valid_heading_indentation(config):
+            errors.append("headingStyle.indentation requires non-negative basePt, incrementPt and hangingPt (one width or nine widths)")
     if "listStyle" in profile:
         config = profile["listStyle"]
         if not isinstance(config, dict) or set(config) - {"ordered", "unordered"}:

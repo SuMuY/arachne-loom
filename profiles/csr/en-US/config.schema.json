@@ -18,7 +18,8 @@
           "properties": {
             "basePt": {"type": "number", "minimum": 0},
             "incrementPt": {"type": "number", "minimum": 0},
-            "hangingPt": {"type": "number", "minimum": 0}
+            "hangingPt": {"oneOf": [{"type": "number", "minimum": 0},
+              {"type": "array", "minItems": 9, "maxItems": 9, "items": {"type": "number", "minimum": 0}}]}
           }
         }
       }

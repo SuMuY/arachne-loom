@@ -21,7 +21,7 @@ from docx.shared import Cm, Pt, RGBColor
 
 from . import __version__
 from .fields import append_caption, append_cross_reference, append_toc_field
-from .validator import native_heading_paths, validate_or_raise
+from .validator import heading_geometry, native_heading_paths, validate_or_raise
 
 
 def _hash(path: Path) -> str:
@@ -62,9 +62,7 @@ def _heading_geometry(profile: dict[str, Any], level: int) -> tuple[int, int] | 
     config = profile.get("headingStyle", {}).get("indentation")
     if config is None:
         return None
-    # Resolve to twips once so styles and numbering use identical rounding.
-    anchor = config["basePt"] + (level - 1) * config["incrementPt"]
-    return round((anchor + config["hangingPt"]) * 20), round(config["hangingPt"] * 20)
+    return heading_geometry(config, level)
 
 
 def _new_list_numbering(document: Document, items: list[dict[str, Any]], default_kind: str,

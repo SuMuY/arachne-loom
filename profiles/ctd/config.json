@@ -5,7 +5,7 @@
   "languageFallback": "zh-CN",
   "page": {"size": "letter", "marginsCm": {"top": 2, "right": 2, "bottom": 2, "left": 2}, "orientation": "portrait"},
   "body": {"fontFamily": "Times New Roman", "fontSizePt": 12, "lineSpacing": 1.5, "alignment": "justified", "paragraphAfterPt": 6},
-  "headingStyle": {"italic": false, "indentation": {"basePt": 0, "incrementPt": 18, "hangingPt": 54}},
+  "headingStyle": {"italic": false, "indentation": {"basePt": 0, "incrementPt": 18, "hangingPt": [24, 32, 42, 54, 64, 74, 84, 94, 104]}},
   "table": {"fontSizePt": 10.5, "layout": "autoFitWindow", "style": "threeLine", "repeatHeaderRow": true},
   "styles": {"roles": {
     "headingLevel1": {"styleId": "Heading1", "styleName": "标题 1", "outlineLevel": 0},

@@ -8,7 +8,7 @@ multilevel numbering, rather than typed spaces or tabs in heading text.
 | --- | --- |
 | `basePt` | Level-1 number's left position, relative to the page's text margin |
 | `incrementPt` | Additional inset per semantic heading level |
-| `hangingPt` | Reserved number width from the level anchor to text and continuation-line start |
+| `hangingPt` | Reserved number width from the level anchor to text and continuation-line start. Accepts one width for all levels or nine widths ordered from levels 1 to 9. |
 
 For semantic level L, the number anchor is `basePt + (L - 1) * incrementPt`;
 the text starts at that anchor plus `hangingPt`. Values are rounded to Word's
