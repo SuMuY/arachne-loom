@@ -181,7 +181,9 @@ def test_csr_native_caption_results_restart_at_chapters(tmp_path):
     fields = inspect(output / 'document.docx')['fields']
     assert fields.count(r'SEQ Table \s 1 \* ARABIC') == 3
     assert fields.count(r'SEQ Figure \s 1 \* ARABIC') == 2
-    assert sum(field.startswith('REF ') for field in fields) == 2
+    refs = [field for field in fields if field.startswith('REF ')]
+    assert len(refs) == 2
+    assert all(field.endswith(r' \* CHARFORMAT \h') for field in refs)
 
 
 def test_native_profile_overrides(tmp_path):

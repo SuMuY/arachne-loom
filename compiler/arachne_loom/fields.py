@@ -84,7 +84,7 @@ def append_cross_reference(paragraph, bookmark: str, cached: str, color: str = "
                            character_style: str = "Hyperlink") -> None:
     # Keep the reference as one Word-native REF field, matching Word's own
     # cross-reference structure and avoiding nested-field style loss.
-    append_field(paragraph._p, f"REF {bookmark} \\h", cached, color, underline, character_style)
+    append_field(paragraph._p, f"REF {bookmark} \\* CHARFORMAT \\h", cached, color, underline, character_style)
 
 
 def append_toc_field(paragraph, instruction: str) -> None:

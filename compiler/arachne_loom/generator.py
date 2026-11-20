@@ -563,7 +563,7 @@ def compile_document(model: dict[str, Any], profile: dict[str, Any], task: dict[
         if actual.get("structuralIssues"):
             raise ValueError(f"generated DOCX has structural field/bookmark issues: {actual['structuralIssues']}")
         caches = {item["bookmark"]: item["cachedDisplay"] for item in manifest["captions"]}
-        expected_refs = [[f"REF {_stable_bookmark(item['targetId'])} \\h", caches[_stable_bookmark(item["targetId"])]]
+        expected_refs = [[f"REF {_stable_bookmark(item['targetId'])} \\* CHARFORMAT \\h", caches[_stable_bookmark(item["targetId"])]]
                          for item in manifest["crossReferences"]]
         expected_tables = [b["rows"] for b in model["blocks"] if b["type"] == "table"]
         expected_paragraphs = []

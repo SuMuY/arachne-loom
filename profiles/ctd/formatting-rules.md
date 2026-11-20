@@ -49,9 +49,9 @@
 **Counterexample**: A bookmark spanning the entire caption title.
 
 ### Reference display styling
-**Rule**: The v0 baseline uses a single updateable `REF \h` field; do not add unverified field switches.
-**Why**: The target Word profile rejects tested `CHARFORMAT` and `MERGEFORMAT` variants, while plain REF remains updateable and navigable.
-**Detection**: Inspectors must find the REF target and no nested HYPERLINK or `\*` switch; blue/underline persistence remains a separate open question.
+**Rule**: Use one native `REF bookmark \* CHARFORMAT \h` field.
+**Why**: Desktop Word preserved the reference style with this switch order. Putting the formatting switch after the navigation switch caused an update error.
+**Detection**: Check the REF target and switch order. Update and save the document in desktop Word, then check the displayed text and effective character style.
 **Counterexample**: A visually blue reference uses an unsupported switch and displays a Word error after updating.
 
 ### Resource containment
