@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import tempfile
 import zipfile
 from pathlib import Path
@@ -158,8 +159,14 @@ def normalize_docx(source: str | Path, output: str | Path, profile: dict[str, An
             continue
         seen.add(id(paragraph._p))
         style_id = paragraph.style.style_id
-        if style_id.startswith("Heading") and style_id[7:].isdigit():
-            headings += _apply_heading_geometry(paragraph, profile, int(style_id[7:]))
+        match = re.fullmatch(r"Heading([1-9])", style_id)
+        if match is None:
+            candidate = re.fullmatch(r"Heading ([1-9])", paragraph.style.name or "")
+            outline = paragraph.style._element.xpath("./w:pPr/w:outlineLvl/@w:val")
+            if candidate and not paragraph.style._element.get(qn("w:customStyle")) in ("1", "true", "on") and outline == [str(int(candidate[1]) - 1)]:
+                match = candidate
+        if match:
+            headings += _apply_heading_geometry(paragraph, profile, int(match[1]))
         elif _list_level(paragraph, doc.part.numbering_part.element) is not None:
             item = _list_level(paragraph, doc.part.numbering_part.element)
             lists += _apply_list_geometry(doc, paragraph, profile, item[2])
