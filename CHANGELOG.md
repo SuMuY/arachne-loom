@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.5 - Medical writing profiles and native Word formatting (2026-11-20)
+
+- Add CTD and CSR profiles with separate chapter rules for captions.
+- Support native multilevel lists and geometry normalization for recognized headings and lists in existing DOCX files.
+- Apply profile settings for page, body, tables and captions, and preserve cross-reference styling after Word field updates.
+- Document the Skill entry point and desktop Word acceptance.
+
 ## 0.0.4 - Accepted heading and list formatting (2026-11-18)
 
 - Added native ordered/unordered lists, configurable global marker/text positions, and hanging indents.
