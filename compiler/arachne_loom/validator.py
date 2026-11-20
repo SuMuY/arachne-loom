@@ -30,6 +30,21 @@ def _role(profile: dict[str, Any], role: str) -> dict[str, Any] | None:
 
 def validate(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]) -> list[str]:
     errors: list[str] = []
+    for section, fields in (("body", ("lineSpacing", "paragraphAfterPt")), ("table", ("fontSizePt",))):
+        config = profile.get(section, {})
+        if not isinstance(config, dict):
+            errors.append(f"profile {section} must be an object")
+            continue
+        for field in fields:
+            if field not in config:
+                continue
+            value = config[field]
+            minimum = "non-negative" if field == "paragraphAfterPt" else "positive"
+            if (isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value)
+                    or value < 0 or (value == 0 and field != "paragraphAfterPt")):
+                errors.append(f"profile {section}.{field} must be a finite {minimum} number")
+        if section == "body" and "alignment" in config and config["alignment"] not in ("left", "center", "right", "justified"):
+            errors.append("profile body.alignment must be left, center, right, or justified")
     heading = profile.get("headingStyle", {})
     if "indentation" in heading:
         config = heading["indentation"]

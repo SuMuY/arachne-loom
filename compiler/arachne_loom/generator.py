@@ -13,7 +13,7 @@ from typing import Any
 
 from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
-from docx.enum.text import WD_TAB_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
@@ -238,6 +238,21 @@ def _actual_style_name(document: Document, style_id: str) -> str:
     raise ValueError(f"base template lacks style ID {style_id}")
 
 
+def _apply_body_paragraph_format(paragraph, body: dict[str, Any]) -> None:
+    formatting = paragraph.paragraph_format
+    if "lineSpacing" in body:
+        formatting.line_spacing = body["lineSpacing"]
+    if "alignment" in body:
+        formatting.alignment = {
+            "left": WD_ALIGN_PARAGRAPH.LEFT,
+            "center": WD_ALIGN_PARAGRAPH.CENTER,
+            "right": WD_ALIGN_PARAGRAPH.RIGHT,
+            "justified": WD_ALIGN_PARAGRAPH.JUSTIFY,
+        }[body["alignment"]]
+    if "paragraphAfterPt" in body:
+        formatting.space_after = Pt(body["paragraphAfterPt"])
+
+
 def _apply_profile(document: Document, profile: dict[str, Any]) -> None:
     body = profile.get("body", {})
     normal = document.styles["Normal"]
@@ -356,6 +371,8 @@ def expected_manifest(model: dict[str, Any], profile: dict[str, Any], task: dict
 def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any], base: Path, output: Path) -> dict[str, Any]:
     document = Document(base)
     _apply_profile(document, profile)
+    body_format = profile.get("body", {})
+    table_font_size = profile.get("table", {}).get("fontSizePt")
     first_path = next((block.get("numberPath", []) for block in model["blocks"] if block.get("type") == "heading"), [])
     heading_num_id = _ensure_heading_numbering(document, first_path, profile)
     language = model["language"]
@@ -409,6 +426,8 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
                     paragraph.paragraph_format.left_indent = Pt(text / 20)
                     paragraph.paragraph_format.first_line_indent = Pt((marker - text) / 20)
                     paragraph.paragraph_format.tab_stops.add_tab_stop(Pt(text / 20), WD_TAB_ALIGNMENT.LIST)
+                else:
+                    _apply_body_paragraph_format(paragraph, body_format)
                 for inline in item["inlines"]:
                     if inline["type"] == "text":
                         paragraph.add_run(inline["text"])
@@ -430,7 +449,10 @@ def _render(model: dict[str, Any], profile: dict[str, Any], task: dict[str, Any]
             table.style = "Table Grid"
             for row_index, row in enumerate(rows):
                 for col_index, value in enumerate(row):
-                    table.cell(row_index, col_index).text = value
+                    cell = table.cell(row_index, col_index)
+                    cell.text = value
+                    if table_font_size is not None:
+                        cell.paragraphs[0].runs[0].font.size = Pt(table_font_size)
             _set_repeat_table_header(table.rows[0])
         elif kind == "figure":
             figure_seq += 1

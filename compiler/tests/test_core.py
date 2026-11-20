@@ -3,6 +3,10 @@ from pathlib import Path
 
 import pytest
 from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt
+
+from arachne_loom.cli import main
 
 from arachne_loom.generator import compile_document
 from arachne_loom.inspector import inspect
@@ -85,6 +89,50 @@ def test_csr_captions_use_top_level_chapter_number(tmp_path):
     assert 'STYLEREF "标题 1" \\s \\* MERGEFORMAT' in actual["fields"]
     assert "SEQ Table \\s 1 \\* ARABIC" in actual["fields"]
     assert actual["structuralIssues"] == []
+
+
+@pytest.mark.parametrize("document_type, language, custom", [
+    ("ctd", "zh-CN", False), ("ctd", "en-US", False),
+    ("csr", "zh-CN", False), ("csr", "en-US", False),
+    ("csr", "zh-CN", True),
+])
+def test_compile_applies_body_and_table_format_from_profile(tmp_path, document_type, language, custom):
+    model = parse_markdown(PACKAGE / "examples/quickstart/sample.md")
+    model["language"] = language
+    heading = next(block for block in model["blocks"] if block["type"] == "heading")
+    if document_type == "csr":
+        heading.update(level=1, numberPath=["1"])
+    profile_path = PACKAGE / f"profiles/{document_type}/{language}/config.json"
+    spacing, alignment, after, table_size = 1.5, WD_ALIGN_PARAGRAPH.JUSTIFY, 6, 10.5
+    if custom:
+        profile = json.loads(profile_path.read_text())
+        profile["body"].update(lineSpacing=2, alignment="left", paragraphAfterPt=0)
+        profile["table"]["fontSizePt"] = 9
+        profile_path = tmp_path / "profile.json"
+        profile_path.write_text(json.dumps(profile))
+        spacing, alignment, after, table_size = 2, WD_ALIGN_PARAGRAPH.LEFT, 0, 9
+    model_path = tmp_path / "model.json"
+    model_path.write_text(json.dumps(model))
+    task_path = tmp_path / "task.json"
+    task_path.write_text(json.dumps({"baseTemplate": str(PACKAGE / f"compiler/templates/{language}/base.docx")}))
+    output = tmp_path / "build"
+    assert main(["compile", str(model_path), str(profile_path), str(task_path), "--out-dir", str(output)]) == 0
+
+    document = Document(output / "document.docx")
+    for paragraph in document.paragraphs:
+        if paragraph.style.name == "Normal":
+            assert paragraph.paragraph_format.line_spacing == spacing
+            assert paragraph.alignment == alignment
+            assert paragraph.paragraph_format.space_after == Pt(after)
+    assert sum(p.style.name == "Normal" for p in document.paragraphs) == 2
+    assert document.paragraphs[0].paragraph_format.line_spacing is None
+    caption = next(p for p in document.paragraphs if p.style.name == "Caption")
+    assert caption.paragraph_format.line_spacing == 1
+    assert caption.alignment == WD_ALIGN_PARAGRAPH.CENTER
+    for row in document.tables[0].rows:
+        for cell in row.cells:
+            assert cell.text
+            assert all(run.font.size == Pt(table_size) for p in cell.paragraphs for run in p.runs)
 
 
 def test_inspector_detects_crossing_bookmark(tmp_path):

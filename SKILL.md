@@ -15,6 +15,7 @@ All repository-relative paths below are relative to this Skill root. Follow `REA
 
 - For structured Markdown or Canonical Model JSON, read `docs/authoring-guide.md`, preserve supplied content, then use `parse` (Markdown only), `validate`, and `compile`.
 - Select the profile matching the medical document type and language: `profiles/ctd/{zh-CN,en-US}/config.json` for CTD or `profiles/csr/{zh-CN,en-US}/config.json` for CSR. The profiles share the same formatting baseline but use different caption chapter levels; see the Scope section.
+- For new DOCX generation, supply the selected profile to `loom validate` and `loom compile`. Put any requested variation in a copy of the profile. Use `body.lineSpacing` (line multiplier), `body.alignment` (`left`, `center`, `right`, or `justified`), `body.paragraphAfterPt` (points), and `table.fontSizePt` (points). The compiler writes these settings as native Word paragraph and cell text formatting.
 - For an existing DOCX, run `loom inspect` first and review its structure and limitations. Use `loom normalize` only for recognized native Heading 1–9 paragraphs and native ordered/unordered list definitions. Always write to a different output path; never overwrite the source.
 - If heading/list semantics are uncertain, report the affected paragraphs for author confirmation. Do not infer headings from appearance or turn every `1.` or bullet-like character into a list.
 
@@ -29,7 +30,7 @@ All repository-relative paths below are relative to this Skill root. Follow `REA
 
 1. Compare source and output text, tables, images, fields, bookmarks, section properties, and package-part hashes.
 2. Run the independent inspector and resolve structural issues.
-3. Verify in desktop Word: heading levels step inward and same-level headings align; number-to-text spacing is compact; nested numbering, restarts, and continuation lines align; no marker-only line or unintended break separates a label from its text.
+3. For new DOCX output, check the selected profile against Word’s Paragraph settings on body paragraphs and the font size of both table header and data cells. Then verify in desktop Word: heading levels step inward and same-level headings align; number-to-text spacing is compact; nested numbering, restarts, and continuation lines align; no marker-only line or unintended break separates a label from its text.
 4. Save, close, reopen, and repeat the visual checks. Static XML checks alone do not establish acceptance.
 5. Give an independent reviewer the original requirement, manifests, and output DOCX.
 
@@ -39,8 +40,8 @@ If output is wrong, classify the evidence as a compiler/profile defect, workflow
 
 Organize the formatting behavior in two levels:
 
-1. **Shared medical-writing formatting rules:** preserve supplied text and data; use native Word heading levels and numbering, nested ordered/unordered lists, rectangular tables, figures, chapter-based captions, cross-references, and body/table/figure lists. Apply the selected profile's implemented page, heading/list/caption style, and numbering parameters; validate the structure and inspect the result in Word.
-2. **Document-type profiles:** choose the CTD or CSR profile for the document's language. Both currently share the same page, heading-style, caption-style, cross-reference, and TOC settings. CTD captions take their chapter number from Heading 3 for tables and Heading 4 for figures, resetting the corresponding sequence at that level. CSR captions take their chapter number from Heading 1 for both tables and figures, resetting both sequences at level 1. These caption-level choices are profile settings, not different Word mechanisms.
+1. **Shared medical-writing formatting rules:** preserve supplied text and data; use native Word heading levels and numbering, nested ordered/unordered lists, rectangular tables, figures, chapter-based captions, cross-references, and body/table/figure lists. Apply the selected profile's implemented page, body paragraph, table text size, heading/list/caption style, and numbering parameters; validate the structure and inspect the result in Word.
+2. **Document-type profiles:** choose the CTD or CSR profile for the document's language. Both currently choose 1.5 line spacing, justified body paragraphs, 6 pt after each body paragraph, and 10.5 pt table text. They also share page, heading-style, caption-style, cross-reference, and TOC settings. CTD captions take their chapter number from Heading 3 for tables and Heading 4 for figures, resetting the corresponding sequence at that level. CSR captions take their chapter number from Heading 1 for both tables and figures, resetting both sequences at level 1. These caption-level choices are profile settings, not different Word mechanisms.
 
 The repository supplies Chinese and English profiles for both CTD and CSR. See `README.md` for the profile paths and `docs/docx-normalization.md` for existing-DOCX limits.
 
